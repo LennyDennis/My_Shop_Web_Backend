@@ -38,6 +38,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u")
     , @NamedQuery(name = "User.findById", query = "SELECT u FROM User u WHERE u.id = :id")
     , @NamedQuery(name = "User.findByRole", query = "SELECT u FROM User u WHERE u.role = :role")
+    , @NamedQuery(name = "User.findByRegistrationStatus", query = "SELECT u FROM User u WHERE u.registrationStatus = :registrationStatus")
     , @NamedQuery(name = "User.findByDeletionStatus", query = "SELECT u FROM User u WHERE u.deletionStatus = :deletionStatus")
     , @NamedQuery(name = "User.findByRegisteredDate", query = "SELECT u FROM User u WHERE u.registeredDate = :registeredDate")})
 public class User implements Serializable {
@@ -55,11 +56,9 @@ public class User implements Serializable {
     @Column(name = "name", nullable = false, length = 65535)
     private String name;
     // @Pattern(regexp="[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", message="Invalid email")//if the field contains email address consider using this annotation to enforce field validation
-    @Basic(optional = false)
-    @NotNull
     @Lob
-    @Size(min = 1, max = 65535)
-    @Column(name = "email", nullable = false, length = 65535)
+    @Size(max = 65535)
+    @Column(name = "email", length = 65535)
     private String email;
     // @Pattern(regexp="^\\(?(\\d{3})\\)?[- ]?(\\d{3})[- ]?(\\d{4})$", message="Invalid phone/fax format, should be as xxx-xxx-xxxx")//if the field contains phone or fax number consider using this annotation to enforce field validation
     @Basic(optional = false)
@@ -72,12 +71,14 @@ public class User implements Serializable {
     @NotNull
     @Column(name = "role", nullable = false)
     private int role;
+    @Lob
+    @Size(max = 65535)
+    @Column(name = "password", length = 65535)
+    private String password;
     @Basic(optional = false)
     @NotNull
-    @Lob
-    @Size(min = 1, max = 65535)
-    @Column(name = "password", nullable = false, length = 65535)
-    private String password;
+    @Column(name = "registration_status", nullable = false)
+    private int registrationStatus;
     @Basic(optional = false)
     @NotNull
     @Column(name = "deletion_status", nullable = false)
@@ -101,13 +102,12 @@ public class User implements Serializable {
         this.id = id;
     }
 
-    public User(Integer id, String name, String email, String phone, int role, String password, int deletionStatus, Date registeredDate) {
+    public User(Integer id, String name, String phone, int role, int registrationStatus, int deletionStatus, Date registeredDate) {
         this.id = id;
         this.name = name;
-        this.email = email;
         this.phone = phone;
         this.role = role;
-        this.password = password;
+        this.registrationStatus = registrationStatus;
         this.deletionStatus = deletionStatus;
         this.registeredDate = registeredDate;
     }
@@ -158,6 +158,14 @@ public class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public int getRegistrationStatus() {
+        return registrationStatus;
+    }
+
+    public void setRegistrationStatus(int registrationStatus) {
+        this.registrationStatus = registrationStatus;
     }
 
     public int getDeletionStatus() {
