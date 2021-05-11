@@ -16,21 +16,33 @@
     
     <dependencies>
         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>5.4.3.Final</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>eclipselink</artifactId>
             <version>2.5.2</version>
             <scope>provided</scope>
+        </dependency>
+        <!--        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+            <version>2.5.2</version>
+            <scope>provided</scope>
+        </dependency>-->
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>8.0</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-web-api</artifactId>
             <version>7.0</version>
             <scope>provided</scope>
-        </dependency>
-       <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-jpamodelgen</artifactId>
-            <version>5.4.3.Final</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>

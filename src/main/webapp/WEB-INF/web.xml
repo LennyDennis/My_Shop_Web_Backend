@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp_ID" version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+    <display-name>the-display-name</display-name>
+    
+    <servlet>
+        <servlet-name>Jersey REST Service</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+        <!-- Application configuration, used for registering resources like filters  -->
+        <init-param>
+            <param-name>javax.ws.rs.Application</param-name>
+            <param-value>com.lenny.my_shop_web_backend.config.MyApplication</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>Jersey REST Service</servlet-name>
+        <url-pattern>/api/*</url-pattern>
+    </servlet-mapping>
+    
+    <filter>
+        <filter-name>cors</filter-name>
+        <filter-class>com.lenny.my_shop_web_backend.config.MyCorsFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>cors</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    
+    <filter>
+        <filter-name>NoCachingFilter</filter-name>
+        <filter-class>com.lenny.my_shop_web_backend.config.NoCachingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>NoCachingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>
