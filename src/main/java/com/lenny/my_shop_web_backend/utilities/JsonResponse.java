@@ -11,20 +11,23 @@ package com.lenny.my_shop_web_backend.utilities;
  */
 public class JsonResponse {
     
-    private Integer code;
+    private Integer responseCode;
     private String message;
 
+    public JsonResponse() {
+    }
+
     public JsonResponse(Integer code, String message) {
-        this.code = code;
+        this.responseCode = code;
         this.message = message;
     }
 
-    public Integer getCode() {
-        return code;
+    public Integer getResponseCode() {
+        return responseCode;
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
+    public void setResponseCode(Integer responseCode) {
+        this.responseCode = responseCode;
     }
 
     public String getMessage() {

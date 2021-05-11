@@ -1,0 +1,44 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.lenny.my_shop_web_backend.utilities;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.ejb.Stateless;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
+
+/**
+ *
+ * @author lenny
+ */
+public class Utils {
+
+    @Context
+    private static HttpServletRequest httpRequest;
+
+    public static String getUrlPrefix() {
+        String hostname = httpRequest.getServerName();
+        Integer port_number = httpRequest.getServerPort();
+        String context_path = httpRequest.getContextPath();
+        String port;
+
+        List<Integer> ignored_ports = new ArrayList();
+        ignored_ports.add(80);
+        ignored_ports.add(8080);
+        ignored_ports.add(443);
+
+        if (ignored_ports.contains(port_number)) {
+            port = "";
+        } else {
+            port = ":" + String.valueOf(port_number);
+        }
+
+        String url_prefix = "https://" + hostname + port + context_path + "/";
+        return url_prefix;
+    }
+
+}
