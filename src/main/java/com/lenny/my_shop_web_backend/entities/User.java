@@ -75,6 +75,10 @@ public class User implements Serializable {
     @Size(max = 65535)
     @Column(name = "password", length = 65535)
     private String password;
+    @Lob
+    @Size(max = 65535)
+    @Column(name = "auth_key", length = 65535)
+    private String authKey;
     @Basic(optional = false)
     @NotNull
     @Column(name = "registration_status", nullable = false)
@@ -158,6 +162,14 @@ public class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getAuthKey() {
+        return authKey;
+    }
+
+    public void setAuthKey(String authKey) {
+        this.authKey = authKey;
     }
 
     public int getRegistrationStatus() {

@@ -29,6 +29,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Stateless
 public class UserBean {
 
+    //registration status
+    public static final int ACCOUNT_ACTIVATED = 1;
+    public static final int ACCOUNT_NOT_ACTIVATED = 0;
+
     @EJB
     TransactionProvider provider;
 
@@ -61,18 +65,18 @@ public class UserBean {
                             String encodedPassword = encoder.encode(user.getPassword());
                             user.setPassword(encodedPassword);
                             user.setRegisteredDate(currentDate);
-//                            UUID key = UUID.randomUUID();
-//                            user.setAuthkey(key.toString());
-                            user.setRegistrationStatus(0);
-                            user.setDeletionStatus(0);
+                            UUID authKey = UUID.randomUUID();
+                            user.setAuthKey(authKey.toString());
+                            user.setRegistrationStatus(ACCOUNT_NOT_ACTIVATED);
+                            user.setDeletionStatus(ConstantVariables.NOT_DELETED);
                             if (role == ConstantVariables.ADMIN_ROLE) {
-                                user.setRole(1);
+                                user.setRole(ConstantVariables.ADMIN_ROLE);
                             } else {
-                                user.setRole(2);
+                                user.setRole(ConstantVariables.EMPLOYEE_ROLE);
                             }
 
                             if (provider.createEntity(user)) {
-                                mailBean.sendActivationEmail(this.getUrlPrefix(), user.getEmail(), user.getName());
+                                mailBean.sendActivationEmail(this.getUrlPrefix(), user.getEmail(), user.getName(), user.getAuthKey());
                                 response.setMessage("Check your email to activate your account");
                                 response.setResponseCode(200);
                             }
@@ -85,6 +89,33 @@ public class UserBean {
                 response.setMessage("User is empty. Try Again");
             }
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
+        }
+    }
+
+    public JsonResponse activateAccount(String authKey) {
+        JsonResponse response = new JsonResponse(500, "An error has occured");
+        try {
+            if (authKey != null) {
+                User userExists = userDbBean.getUser_ByAuthKey(authKey);
+                if (userExists != null) {
+                    if (userExists.getRegistrationStatus() != ACCOUNT_ACTIVATED) {
+                        userExists.setRegistrationStatus(ACCOUNT_ACTIVATED);
+                        if (provider.updateEntity(userExists)) {
+                            response.setResponseCode(200);
+                            response.setMessage("Account activated");
+                        }
+                    } else {
+                        response.setResponseCode(200);
+                        response.setMessage("Account already been activated");
+                    }
+                } else {
+                    response.setMessage("User does not exists.");
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

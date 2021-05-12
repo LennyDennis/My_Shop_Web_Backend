@@ -8,12 +8,17 @@ package com.lenny.my_shop_web_backend.api;
 import com.lenny.my_shop_web_backend.ejb.UserBean;
 import com.lenny.my_shop_web_backend.entities.User;
 import com.lenny.my_shop_web_backend.utilities.JsonResponse;
+import java.net.URI;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -34,7 +39,12 @@ public class UserAPI {
     public Response registerUser(User user) {
         JsonResponse response = userBean.registerUser(user);
         return Response.ok(response.getResponseCode()).entity(response).build();
-
     }
-
+    
+    @GET
+    @Path("activate/{auth}")
+    public Response activateAccount(@PathParam("auth") String auth) {
+        JsonResponse response = userBean.activateAccount(auth);
+        return Response.ok(response.getResponseCode()).entity(response).build();
+    }
 }

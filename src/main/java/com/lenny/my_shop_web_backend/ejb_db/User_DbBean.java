@@ -72,5 +72,22 @@ public class User_DbBean {
             return res;
         }
     }
+    
+    public User getUser_ByAuthKey(String authKey){
+        User userResponse = null;
+        try{
+            if(authKey != null){
+                EntityManager em = provider.getEM();
+                
+                Query q = em.createQuery("SELECT u From User u WHERE u.authKey = :authKey");
+                q.setParameter("authKey", authKey);
+                userResponse = provider.getSingleResult(q);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+           return userResponse;
+        }
+    }
 
 }
