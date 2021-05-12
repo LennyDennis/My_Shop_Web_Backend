@@ -5,6 +5,7 @@
  */
 package com.lenny.my_shop_web_backend.api;
 
+import com.lenny.my_shop_web_backend.ejb.MailBean;
 import com.lenny.my_shop_web_backend.ejb.UserBean;
 import com.lenny.my_shop_web_backend.entities.User;
 import com.lenny.my_shop_web_backend.utilities.JsonResponse;
@@ -33,6 +34,9 @@ public class UserAPI {
     
     @EJB
     UserBean userBean;
+    
+    @EJB
+    MailBean mailBean;
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
@@ -45,6 +49,13 @@ public class UserAPI {
     @Path("activate/{auth}")
     public Response activateAccount(@PathParam("auth") String auth) {
         JsonResponse response = userBean.activateAccount(auth);
+        return Response.ok(response.getResponseCode()).entity(response).build();
+    }
+    
+    @POST
+    @Path("resend/{email}")
+    public Response sendActivationEmail(@PathParam("email") String email) {
+        JsonResponse response = userBean.resendActivationEmail(email);
         return Response.ok(response.getResponseCode()).entity(response).build();
     }
 }

@@ -23,20 +23,19 @@ public class MailBean {
     @EJB
     private User_DbBean userDbBean;
 
-    @EJB
-    private TransactionProvider provider;
-
     @Asynchronous
-    public void sendActivationEmail(String urlPrefix, String email, String name,String authKey) {
+    public void sendActivationEmail(String urlPrefix, String email, String name, String authKey) {
         if (email != null) {
-            if (name == null) {
+            if (name == null && authKey == null) {
                 User user = userDbBean.getUser_ByEmail(email);
                 if (user != null) {
                     name = user.getName();
                     authKey = user.getAuthKey();
                 }
-            } else {
-                String link = urlPrefix + "api/user/activate/"+authKey;
+            }
+
+            if (name != null && authKey != null) {
+                String link = urlPrefix + "api/user/activate/" + authKey;
                 String subject = "Activate your Account";
                 String message = " <!DOCTYPE html>\n"
                         + "<html>\n"
@@ -213,5 +212,4 @@ public class MailBean {
             }
         }
     }
-
 }

@@ -123,6 +123,26 @@ public class UserBean {
         }
     }
 
+    public JsonResponse resendActivationEmail(String email) {
+        JsonResponse response = new JsonResponse(500, "An error occured");
+        try {
+            if (email != null) {
+                User user = userDbBean.getUser_ByEmail(email);
+                if (user != null) {
+                    mailBean.sendActivationEmail(this.getUrlPrefix(), email, null, null);
+                    response.setResponseCode(200);
+                    response.setMessage("The activation email has been resent");
+                } else {
+                    response.setMessage("User with this email does not exist.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
+        }
+    }
+
     public String getUrlPrefix() {
         String hostname = httpRequest.getServerName();
         Integer port_number = httpRequest.getServerPort();
