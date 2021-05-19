@@ -23,20 +23,36 @@ public class CategoryDatabaseBean {
     @EJB
     private TransactionProvider provider;
 
-public Category getCategory_ByName(String categoryName){
-    Category category = null;
-    try {
-        if(categoryName != null){
-            EntityManager em = provider.getEM();
-            Query q = em.createQuery("SELECT c FROM Category c WHERE c.name = :categoryName");
-            q.setParameter("categoryName", categoryName);
-            category = provider.getSingleResult(q);
+    public Category getCategory_ByName(String categoryName) {
+        Category category = null;
+        try {
+            if (categoryName != null) {
+                EntityManager em = provider.getEM();
+                Query q = em.createQuery("SELECT c FROM Category c WHERE c.name = :categoryName");
+                q.setParameter("categoryName", categoryName);
+                category = provider.getSingleResult(q);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return category;
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }finally{
-        return category;
     }
-}
+    
+    public Category getCategory_ById(Integer categoryId){
+        Category category = null;
+        try {
+            if(categoryId != null){
+                EntityManager em = provider.getEM();
+                Query q = em.createQuery("SELECT c FROM Category c WHERE c.id = :categoryId");
+                q.setParameter("categoryId", categoryId);
+                category = provider.getSingleResult(q);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            return category;
+        }
+    }
 
 }
