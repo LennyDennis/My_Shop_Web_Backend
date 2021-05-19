@@ -13,6 +13,7 @@ import java.util.HashMap;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -50,6 +51,13 @@ public class CategoryAPI {
     @Path("delete")
     public Response deleteCategory(@QueryParam("categoryId") Integer categoryId) {
         JsonResponse response = categoryBean.deleteCategory(categoryId);
+        return Response.ok(response.getResponseCode()).entity(response).build();
+    }
+
+    @GET
+    @Path("categories")
+    public Response getAllCategories() {
+        JsonResponse response = categoryBean.getAllCategories();
         return Response.ok(response.getResponseCode()).entity(response).build();
     }
 

@@ -11,8 +11,10 @@ import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 import com.lenny.my_shop_web_backend.utilities.JsonResponse;
 import com.lenny.my_shop_web_backend.utilities.ValuesFromHashMap;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
@@ -109,6 +111,35 @@ public class CategoryBean {
                     response.setMessage("Category does not exist");
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
+        }
+    }
+
+    public JsonResponse getAllCategories() {
+        HashMap dataHashmap = new HashMap();
+        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE, dataHashmap);
+        try {
+            List<Category> categories = categoryDatabaseBean.getAllCategories();
+            if (categories != null) {
+                List allCategories = new ArrayList();
+                for (Category category : categories) {
+                    HashMap categoryHashMap = new HashMap();
+                    categoryHashMap.put("categoryId", category.getId());
+                    categoryHashMap.put("categoryName", category.getName());
+                    categoryHashMap.put("dateAdded", category.getAddedDate());
+                    categoryHashMap.put("deletionStatis", category.getDeletionStatus());
+                    allCategories.add(categoryHashMap);
+                }
+                dataHashmap.put("categories", allCategories);
+                response.setResponseCode(SUCCESS_CODE);
+                response.setMessage("Fetched all categories");
+            } else {
+                response.setMessage("No categories exists");
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
