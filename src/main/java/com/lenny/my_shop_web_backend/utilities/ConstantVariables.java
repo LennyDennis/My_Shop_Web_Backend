@@ -9,17 +9,22 @@ package com.lenny.my_shop_web_backend.utilities;
  *
  * @author lenny
  */
-public class ConstantVariables {
+public final class ConstantVariables {
 
     //roles
     public static final int ADMIN_ROLE = 1;
     public static final int EMPLOYEE_ROLE = 2;
     public static final int CUSTOMER_ROLE = 3;
-    
+
     //deletion status
     public static final int DELETED = 1;
     public static final int NOT_DELETED = 0;
 
+    //response code status
+    public static final int SUCCESS_CODE = 200;
+    public static final int ERROR_CODE = 500;
 
+    //response message 
+    public static final String ERROR_MESSAGE = "An error has occured";
 
 }
