@@ -23,6 +23,10 @@ public final class ConstantVariables {
     //response code status
     public static final int SUCCESS_CODE = 200;
     public static final int ERROR_CODE = 500;
+    
+    //active status 
+    public static final int ACTIVE = 1;
+    public static final int NOT_ACTIVE = 0;
 
     //response message 
     public static final String ERROR_MESSAGE = "An error has occured";
