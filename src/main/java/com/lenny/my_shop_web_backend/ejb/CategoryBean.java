@@ -24,6 +24,8 @@ import javax.ejb.Stateless;
  */
 @Stateless
 public class CategoryBean {
+    
+    public static final Integer EMPTY_PRODUCT_LIST = 0;
 
     @EJB
     TransactionProvider provider;
@@ -31,38 +33,39 @@ public class CategoryBean {
     @EJB
     CategoryDatabaseBean categoryDatabaseBean;
 
-    public JsonResponse addCategory(Category category) {
+    public JsonResponse addCategory(Category newCategory) {
         JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
         Date currentDate = new Date();
         try {
-            if (category != null) {
-                Category existingCategory = categoryDatabaseBean.getCategory_ByName(category.getName());
-                if (existingCategory == null || existingCategory.getDeletionStatus() == DELETED) {
-                    if (existingCategory.getDeletionStatus() == DELETED) {
-                        existingCategory.setDeletionStatus(NOT_DELETED);
-                        existingCategory.setModifiedOn(currentDate);
-                        existingCategory.setAddedDate(currentDate);
-                        if (provider.createEntity(existingCategory)) {
-                            response.setResponseCode(SUCCESS_CODE);
-                            response.setMessage("Category " + existingCategory.getName() + " has been created");
-                        }
-                    } else {
-                        category.setAddedDate(currentDate);
-                        category.setDeletionStatus(NOT_DELETED);
-                        if (provider.createEntity(category)) {
-                            response.setResponseCode(SUCCESS_CODE);
-                            response.setMessage("Category " + category.getName() + " has been created");
-                        }
-                    }
-
+            if (newCategory != null) {
+                String categoryName = newCategory.getName();
+                String upperCaseName = categoryName.substring(0, 1).toUpperCase() + categoryName.substring(1);
+                newCategory.setName(upperCaseName);
+                Category existingCategory = categoryDatabaseBean.getCategory_ByName(newCategory.getName());
+                if (existingCategory == null) {
+                    newCategory.setDeletionStatus(NOT_DELETED);
+                    newCategory.setModifiedOn(currentDate);
+                    newCategory.setAddedDate(currentDate);
+                    saveNewCategory(newCategory, response);
+                } else if (existingCategory.getDeletionStatus() == DELETED) {
+                    existingCategory.setDeletionStatus(NOT_DELETED);
+                    existingCategory.setModifiedOn(currentDate);
+                    saveNewCategory(existingCategory, response);
                 } else {
-                    response.setMessage("Category " + category.getName() + " already exists");
+                    response.setMessage("Category " + newCategory.getName() + " already exists");
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             return response;
+        }
+    }
+
+    private void saveNewCategory(Category category, JsonResponse response) {
+        if (provider.createEntity(category)) {
+            response.setResponseCode(SUCCESS_CODE);
+            response.setMessage("Category " + category.getName() + " has been created");
         }
     }
 
@@ -101,7 +104,7 @@ public class CategoryBean {
                 Category categoryToDelete = categoryDatabaseBean.getCategory_ById(categoryId);
                 if (categoryToDelete != null) {
                     if (categoryToDelete.getDeletionStatus() != DELETED) {
-                        if (categoryToDelete.getProductList() == null) {
+                        if (categoryToDelete.getProductList().size() == EMPTY_PRODUCT_LIST) {
                             categoryToDelete.setDeletionStatus(DELETED);
                             if (provider.updateEntity(categoryToDelete)) {
                                 response.setResponseCode(SUCCESS_CODE);
