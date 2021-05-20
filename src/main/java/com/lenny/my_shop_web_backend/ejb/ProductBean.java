@@ -10,6 +10,7 @@ import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import com.lenny.my_shop_web_backend.utilities.ConstantVariables;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVE;
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ERROR_CODE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ERROR_MESSAGE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
@@ -44,9 +45,7 @@ public class ProductBean {
                 String productName = product.getName();
                 Integer categoryId = product.getCategory().getId();
                 Product existingProduct = productDatabaseBean.getProduct_ByCategory(productName, categoryId);
-                if (existingProduct != null) {
-                    response.setMessage("Product " + productName + " already exists in this category");
-                } else {
+                if (existingProduct == null) {
                     product.setStockQuantity(ZERO_STOCK);
                     product.setActivationStatus(ACTIVE);
                     product.setRestockStatus(RESTOCK_STATUS_OFF);
@@ -57,6 +56,44 @@ public class ProductBean {
                         response.setResponseCode(SUCCESS_CODE);
                         response.setMessage("Product added successfully");
                     }
+                } else if (existingProduct.getDeletionStatus() == DELETED) {
+                    existingProduct.setActivationStatus(ACTIVE);
+                    existingProduct.setRestockStatus(RESTOCK_STATUS_OFF);
+                    existingProduct.setDeletionStatus(NOT_DELETED);
+                    existingProduct.setModifiedOn(currentDate);
+                    if (transactionProvider.createEntity(existingProduct)) {
+                        response.setResponseCode(SUCCESS_CODE);
+                        response.setMessage("Product added successfully");
+                    }
+                } else {
+                    response.setMessage("Product " + productName + " already exists in this category");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
+        }
+    }
+
+    public JsonResponse editProduct(Product editProduct) {
+        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
+        Date currentDate = new Date();
+        try {
+            if (editProduct != null) {
+                Product retrievedProduct = productDatabaseBean.getProduct_ById(editProduct.getId());
+                if (retrievedProduct != null) {
+                    if (retrievedProduct == editProduct) {
+                        response.setMessage("All the products fields are equal");
+                    } else {
+                        editProduct.setModifiedOn(currentDate);
+                        if (transactionProvider.updateEntity(retrievedProduct)) {
+                            response.setResponseCode(SUCCESS_CODE);
+                            response.setMessage("Product added successfully");
+                        }
+                    }
+                } else {
+                    response.setMessage("Product does not exist");
                 }
             }
         } catch (Exception e) {
