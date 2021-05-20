@@ -39,8 +39,9 @@ public class CategoryBean {
                 Category existingCategory = categoryDatabaseBean.getCategory_ByName(category.getName());
                 if (existingCategory == null || existingCategory.getDeletionStatus() == DELETED) {
                     if (existingCategory.getDeletionStatus() == DELETED) {
-                        existingCategory.setAddedDate(currentDate);
                         existingCategory.setDeletionStatus(NOT_DELETED);
+                        existingCategory.setModifiedOn(currentDate);
+                        existingCategory.setAddedDate(currentDate);
                         if (provider.createEntity(existingCategory)) {
                             response.setResponseCode(SUCCESS_CODE);
                             response.setMessage("Category " + existingCategory.getName() + " has been created");
@@ -67,6 +68,7 @@ public class CategoryBean {
 
     public JsonResponse editCategory(Integer categoryId, HashMap hashMap) {
         JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
+        Date currentDate = new Date();
         try {
             if (hashMap != null) {
                 String categoryName = ValuesFromHashMap.getStringValue_FromHashMap(hashMap, "name");
@@ -74,8 +76,8 @@ public class CategoryBean {
                 if (existingCategory == null) {
                     Category categoryToEdit = categoryDatabaseBean.getCategory_ById(categoryId);
                     if (categoryToEdit != null) {
-                        String originalName = categoryToEdit.getName();
                         categoryToEdit.setName(categoryName);
+                        categoryToEdit.setModifiedOn(currentDate);
                         if (provider.updateEntity(categoryToEdit)) {
                             response.setResponseCode(SUCCESS_CODE);
                             response.setMessage("Category name has been updated to " + categoryToEdit.getName());
@@ -99,10 +101,14 @@ public class CategoryBean {
                 Category categoryToDelete = categoryDatabaseBean.getCategory_ById(categoryId);
                 if (categoryToDelete != null) {
                     if (categoryToDelete.getDeletionStatus() != DELETED) {
-                        categoryToDelete.setDeletionStatus(DELETED);
-                        if (provider.updateEntity(categoryToDelete)) {
-                            response.setResponseCode(SUCCESS_CODE);
-                            response.setMessage("Category " + categoryToDelete.getName() + " has been deleted");
+                        if (categoryToDelete.getProductList() == null) {
+                            categoryToDelete.setDeletionStatus(DELETED);
+                            if (provider.updateEntity(categoryToDelete)) {
+                                response.setResponseCode(SUCCESS_CODE);
+                                response.setMessage("Category " + categoryToDelete.getName() + " has been deleted");
+                            }
+                        } else {
+                            response.setMessage("You can't delete category that has products");
                         }
                     } else {
                         response.setMessage("Category has already been deleted");

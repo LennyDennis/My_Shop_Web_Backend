@@ -37,8 +37,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @NamedQueries({
     @NamedQuery(name = "Category.findAll", query = "SELECT c FROM Category c")
     , @NamedQuery(name = "Category.findById", query = "SELECT c FROM Category c WHERE c.id = :id")
-    , @NamedQuery(name = "Category.findByAddedDate", query = "SELECT c FROM Category c WHERE c.addedDate = :addedDate")
-    , @NamedQuery(name = "Category.findByDeletionStatus", query = "SELECT c FROM Category c WHERE c.deletionStatus = :deletionStatus")})
+    , @NamedQuery(name = "Category.findByDeletionStatus", query = "SELECT c FROM Category c WHERE c.deletionStatus = :deletionStatus")
+    , @NamedQuery(name = "Category.findByModifiedOn", query = "SELECT c FROM Category c WHERE c.modifiedOn = :modifiedOn")
+    , @NamedQuery(name = "Category.findByAddedDate", query = "SELECT c FROM Category c WHERE c.addedDate = :addedDate")})
 public class Category implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -55,13 +56,18 @@ public class Category implements Serializable {
     private String name;
     @Basic(optional = false)
     @NotNull
+    @Column(name = "deletion_status", nullable = false)
+    private int deletionStatus;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "modified_on", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date modifiedOn;
+    @Basic(optional = false)
+    @NotNull
     @Column(name = "added_date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date addedDate;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "deletion_status", nullable = false)
-    private int deletionStatus;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "category")
     private List<Product> productList;
 
@@ -72,11 +78,12 @@ public class Category implements Serializable {
         this.id = id;
     }
 
-    public Category(Integer id, String name, Date addedDate, int deletionStatus) {
+    public Category(Integer id, String name, int deletionStatus, Date modifiedOn, Date addedDate) {
         this.id = id;
         this.name = name;
-        this.addedDate = addedDate;
         this.deletionStatus = deletionStatus;
+        this.modifiedOn = modifiedOn;
+        this.addedDate = addedDate;
     }
 
     public Integer getId() {
@@ -95,20 +102,28 @@ public class Category implements Serializable {
         this.name = name;
     }
 
-    public Date getAddedDate() {
-        return addedDate;
-    }
-
-    public void setAddedDate(Date addedDate) {
-        this.addedDate = addedDate;
-    }
-
     public int getDeletionStatus() {
         return deletionStatus;
     }
 
     public void setDeletionStatus(int deletionStatus) {
         this.deletionStatus = deletionStatus;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
+    }
+
+    public Date getAddedDate() {
+        return addedDate;
+    }
+
+    public void setAddedDate(Date addedDate) {
+        this.addedDate = addedDate;
     }
 
     @XmlTransient
