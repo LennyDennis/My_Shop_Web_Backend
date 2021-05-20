@@ -46,7 +46,8 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Product.findByActivationStatus", query = "SELECT p FROM Product p WHERE p.activationStatus = :activationStatus")
     , @NamedQuery(name = "Product.findByDeletionStatus", query = "SELECT p FROM Product p WHERE p.deletionStatus = :deletionStatus")
     , @NamedQuery(name = "Product.findByRestockStatus", query = "SELECT p FROM Product p WHERE p.restockStatus = :restockStatus")
-    , @NamedQuery(name = "Product.findByModifiedOn", query = "SELECT p FROM Product p WHERE p.modifiedOn = :modifiedOn")})
+    , @NamedQuery(name = "Product.findByModifiedOn", query = "SELECT p FROM Product p WHERE p.modifiedOn = :modifiedOn")
+    , @NamedQuery(name = "Product.findByAddedDate", query = "SELECT p FROM Product p WHERE p.addedDate = :addedDate")})
 public class Product implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -94,6 +95,11 @@ public class Product implements Serializable {
     @Column(name = "modified_on", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modifiedOn;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "added_date", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date addedDate;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
     private List<Notification> notificationList;
     @JoinColumn(name = "category", referencedColumnName = "id", nullable = false)
@@ -109,7 +115,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Integer id, String name, float buyingPrice, float sellingPrice, float maxDiscount, int stockQuantity, int activationStatus, int deletionStatus, int restockStatus, Date modifiedOn) {
+    public Product(Integer id, String name, float buyingPrice, float sellingPrice, float maxDiscount, int stockQuantity, int activationStatus, int deletionStatus, int restockStatus, Date modifiedOn, Date addedDate) {
         this.id = id;
         this.name = name;
         this.buyingPrice = buyingPrice;
@@ -120,6 +126,7 @@ public class Product implements Serializable {
         this.deletionStatus = deletionStatus;
         this.restockStatus = restockStatus;
         this.modifiedOn = modifiedOn;
+        this.addedDate = addedDate;
     }
 
     public Integer getId() {
@@ -200,6 +207,14 @@ public class Product implements Serializable {
 
     public void setModifiedOn(Date modifiedOn) {
         this.modifiedOn = modifiedOn;
+    }
+
+    public Date getAddedDate() {
+        return addedDate;
+    }
+
+    public void setAddedDate(Date addedDate) {
+        this.addedDate = addedDate;
     }
 
     @XmlTransient
