@@ -36,15 +36,13 @@ public class CategoryAPI {
 
     @POST
     public Response addCategory(Category category) {
-        JsonResponse response = categoryBean.addCategory(category);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return categoryBean.addCategory(category);
     }
 
     @PUT
     @Path("edit")
     public Response editCategory(@QueryParam("categoryId") Integer categoryId, HashMap hashMap) {
-        JsonResponse response = categoryBean.editCategory(categoryId, hashMap);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return categoryBean.editCategory(categoryId, hashMap);
     }
 
     @PUT

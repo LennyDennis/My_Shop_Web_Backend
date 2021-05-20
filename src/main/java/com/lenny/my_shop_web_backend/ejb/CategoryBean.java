@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.persistence.PersistenceException;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -24,7 +27,7 @@ import javax.ejb.Stateless;
  */
 @Stateless
 public class CategoryBean {
-    
+
     public static final Integer EMPTY_PRODUCT_LIST = 0;
 
     @EJB
@@ -33,67 +36,75 @@ public class CategoryBean {
     @EJB
     CategoryDatabaseBean categoryDatabaseBean;
 
-    public JsonResponse addCategory(Category newCategory) {
-        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
-        Date currentDate = new Date();
+    public Response addCategory(Category newCategory) {
         try {
-            if (newCategory != null) {
-                String categoryName = newCategory.getName();
-                String upperCaseName = categoryName.substring(0, 1).toUpperCase() + categoryName.substring(1);
-                newCategory.setName(upperCaseName);
-                Category existingCategory = categoryDatabaseBean.getCategory_ByName(newCategory.getName());
-                if (existingCategory == null) {
-                    newCategory.setDeletionStatus(NOT_DELETED);
-                    newCategory.setModifiedOn(currentDate);
-                    newCategory.setAddedDate(currentDate);
-                    saveNewCategory(newCategory, response);
-                } else if (existingCategory.getDeletionStatus() == DELETED) {
-                    existingCategory.setDeletionStatus(NOT_DELETED);
-                    existingCategory.setModifiedOn(currentDate);
-                    saveNewCategory(existingCategory, response);
-                } else {
-                    response.setMessage("Category " + newCategory.getName() + " already exists");
-                }
+            if (newCategory == null) {
+                throw new BadRequestException("Category is empty");
             }
+            String categoryName = newCategory.getName();
+            String upperCaseName = categoryName.substring(0, 1).toUpperCase() + categoryName.substring(1);
+            newCategory.setName(upperCaseName);
+            Date currentDate = new Date();
+            Category existingCategory = categoryDatabaseBean.getCategory_ByName(newCategory.getName());
+            if (existingCategory != null && existingCategory.getDeletionStatus() == NOT_DELETED) {
+                throw new BadRequestException("Category " + categoryName + " already exists");
+            }
+            if (existingCategory != null && existingCategory.getDeletionStatus() == DELETED) {
+                existingCategory.setDeletionStatus(NOT_DELETED);
+                existingCategory.setModifiedOn(currentDate);
+                saveNewCategory(existingCategory);
+            } else {
+                newCategory.setDeletionStatus(NOT_DELETED);
+                newCategory.setModifiedOn(currentDate);
+                newCategory.setAddedDate(currentDate);
+                saveNewCategory(newCategory);
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("Message", "Category " + categoryName + " has been created");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            return response;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
         }
     }
 
-    private void saveNewCategory(Category category, JsonResponse response) {
-        if (provider.createEntity(category)) {
-            response.setResponseCode(SUCCESS_CODE);
-            response.setMessage("Category " + category.getName() + " has been created");
+    private void saveNewCategory(Category category) {
+        if (!provider.createEntity(category)) {
+            throw new PersistenceException("Category has not been saved successfully");
         }
     }
 
-    public JsonResponse editCategory(Integer categoryId, HashMap hashMap) {
-        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
-        Date currentDate = new Date();
+    public Response editCategory(Integer categoryId, HashMap hashMap) {
         try {
-            if (hashMap != null) {
-                String categoryName = ValuesFromHashMap.getStringValue_FromHashMap(hashMap, "name");
-                Category existingCategory = categoryDatabaseBean.getCategory_ByName(categoryName);
-                if (existingCategory == null) {
-                    Category categoryToEdit = categoryDatabaseBean.getCategory_ById(categoryId);
-                    if (categoryToEdit != null) {
-                        categoryToEdit.setName(categoryName);
-                        categoryToEdit.setModifiedOn(currentDate);
-                        if (provider.updateEntity(categoryToEdit)) {
-                            response.setResponseCode(SUCCESS_CODE);
-                            response.setMessage("Category name has been updated to " + categoryToEdit.getName());
-                        }
-                    }
-                } else {
-                    response.setMessage("Category with name " + categoryName + " already exists");
-                }
+            String categoryName = ValuesFromHashMap.getStringValue_FromHashMap(hashMap, "name");
+            if (categoryName == null) {
+                throw new BadRequestException("The field name is empty");
             }
+            Category existingCategory = categoryDatabaseBean.getCategory_ByName(categoryName);
+            if (existingCategory != null) {
+                throw new BadRequestException("Category with name " + categoryName + " already exists");
+            }
+            Date currentDate = new Date();
+            Category categoryToEdit = categoryDatabaseBean.getCategory_ById(categoryId);
+            categoryToEdit.setName(categoryName);
+            categoryToEdit.setModifiedOn(currentDate);
+            if (!provider.updateEntity(categoryToEdit)) {
+                throw new PersistenceException("Category was not updated successfully");
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("Message", "Category has been updated successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            return response;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
         }
     }
 
