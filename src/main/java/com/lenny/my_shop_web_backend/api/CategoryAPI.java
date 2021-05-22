@@ -55,8 +55,7 @@ public class CategoryAPI {
     @GET
     @Path("categories")
     public Response getAllCategories() {
-        JsonResponse response = categoryBean.getAllCategories();
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return categoryBean.getAllCategories();
     }
 
 }

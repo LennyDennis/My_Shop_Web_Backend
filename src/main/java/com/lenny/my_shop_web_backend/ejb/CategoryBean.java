@@ -143,33 +143,32 @@ public class CategoryBean {
         }
     }
 
-    public JsonResponse getAllCategories() {
-        HashMap dataHashmap = new HashMap();
-        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE, dataHashmap);
+    public Response getAllCategories() {
         try {
             List<Category> categories = categoryDatabaseBean.getAllCategories();
-            if (categories != null) {
-                List allCategories = new ArrayList();
-                for (Category category : categories) {
-                    HashMap categoryHashMap = new HashMap();
-                    categoryHashMap.put("categoryId", category.getId());
-                    categoryHashMap.put("categoryName", category.getName());
-                    categoryHashMap.put("dateAdded", category.getAddedDate());
-                    categoryHashMap.put("deletionStatis", category.getDeletionStatus());
-                    allCategories.add(categoryHashMap);
-                }
-                dataHashmap.put("categories", allCategories);
-                response.setResponseCode(SUCCESS_CODE);
-                response.setMessage("Fetched all categories");
-            } else {
-                response.setMessage("No categories exists");
+            if (categories == null) {
+                throw new BadRequestException("No categories exist");
             }
-
+            List allCategories = new ArrayList();
+            for (Category category : categories) {
+                HashMap categoryHashMap = new HashMap();
+                categoryHashMap.put("categoryId", category.getId());
+                categoryHashMap.put("categoryName", category.getName());
+                categoryHashMap.put("dateAdded", category.getAddedDate());
+                categoryHashMap.put("deletionStatis", category.getDeletionStatus());
+                allCategories.add(categoryHashMap);
+            }
+            HashMap<String,Object> res = new HashMap();
+            res.put("categories", allCategories);
+            res.put("Message", "Fetched all categories");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            return response;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
         }
     }
-
 }
