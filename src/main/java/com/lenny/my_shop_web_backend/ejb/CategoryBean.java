@@ -11,7 +11,6 @@ import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 
-import com.lenny.my_shop_web_backend.utilities.JsonResponse;
 import com.lenny.my_shop_web_backend.utilities.ValuesFromHashMap;
 
 import java.util.ArrayList;

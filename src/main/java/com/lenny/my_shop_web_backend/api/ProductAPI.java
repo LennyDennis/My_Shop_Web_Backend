@@ -33,8 +33,7 @@ public class ProductAPI {
 
     @POST
     public Response addProduct(Product product) {
-        JsonResponse response = productBean.addProduct(product);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return productBean.addProduct(product);
     }
     
     @PUT
