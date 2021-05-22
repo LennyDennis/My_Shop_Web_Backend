@@ -65,12 +65,12 @@ public class CategoryBean {
             res.put("Message", "Category " + categoryName + " has been created");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
-        } catch (PersistenceException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
 
@@ -103,10 +103,10 @@ public class CategoryBean {
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (PersistenceException e) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
 
@@ -135,10 +135,10 @@ public class CategoryBean {
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (PersistenceException e) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
 
@@ -157,17 +157,17 @@ public class CategoryBean {
                 categoryHashMap.put("deletionStatis", category.getDeletionStatus());
                 allCategories.add(categoryHashMap);
             }
-            HashMap<String,Object> res = new HashMap();
+            HashMap<String, Object> res = new HashMap();
             res.put("categories", allCategories);
             res.put("Message", "Fetched all categories");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (PersistenceException e) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
         } catch (Exception e) {
             e.printStackTrace();
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occured").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
 }

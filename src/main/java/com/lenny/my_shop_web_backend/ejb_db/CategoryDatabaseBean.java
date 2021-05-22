@@ -16,6 +16,8 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
+
 /**
  *
  * @author lenny
@@ -47,8 +49,9 @@ public class CategoryDatabaseBean {
         try {
             if (categoryId != null) {
                 EntityManager em = provider.getEM();
-                Query q = em.createQuery("SELECT c FROM Category c WHERE c.id = :categoryId");
+                Query q = em.createQuery("SELECT c FROM Category c WHERE c.id = :categoryId AND c.deletionStatus = :deletionStatus");
                 q.setParameter("categoryId", categoryId);
+                q.setParameter("deletionStatus", NOT_DELETED);
                 category = provider.getSingleResult(q);
             }
         } catch (Exception e) {
@@ -63,7 +66,7 @@ public class CategoryDatabaseBean {
         try {
             EntityManager em = provider.getEM();
             Query q = em.createQuery("SELECT c FROM Category c WHERE c.deletionStatus = :deletionStatus");
-            q.setParameter("deletionStatus", ConstantVariables.NOT_DELETED);
+            q.setParameter("deletionStatus", NOT_DELETED);
             categories = provider.getManyFromQuery(q);
         } catch (Exception e) {
             e.printStackTrace();
