@@ -38,8 +38,7 @@ public class ProductAPI {
     
     @PUT
     public Response editProduct(Product product){
-        JsonResponse response = productBean.editProduct(product);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return productBean.editProduct(product);
     }
 
 }

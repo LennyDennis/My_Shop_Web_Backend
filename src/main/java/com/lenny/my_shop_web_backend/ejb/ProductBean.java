@@ -5,7 +5,9 @@
  */
 package com.lenny.my_shop_web_backend.ejb;
 
+import com.lenny.my_shop_web_backend.ejb_db.CategoryDatabaseBean;
 import com.lenny.my_shop_web_backend.ejb_db.ProductDatabaseBean;
+import com.lenny.my_shop_web_backend.entities.Category;
 import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
@@ -42,17 +44,33 @@ public class ProductBean {
     @EJB
     ProductDatabaseBean productDatabaseBean;
 
+    @EJB
+    CategoryDatabaseBean categoryDatabaseBean;
+
     public Response addProduct(Product product) {
         try {
             if (product == null) {
                 throw new BadRequestException("Product is equal to null");
             }
+
             String productName = product.getName();
             Integer categoryId = product.getCategory().getId();
+            Category existingCategory = categoryDatabaseBean.getCategory_ById(categoryId);
+            if(existingCategory == null){
+                throw new BadRequestException("Category selected does not exist");
+            }
             Product existingProduct = productDatabaseBean.getProduct_ByCategory(productName, categoryId);
             if (existingProduct != null && existingProduct.getDeletionStatus() == NOT_DELETED) {
                 throw new BadRequestException("Product " + productName + " already exists in this category");
             }
+
+            Float sellingPrice = product.getSellingPrice();
+            Float buyingPrice = product.getBuyingPrice();
+            Float maxDiscountMark = sellingPrice - buyingPrice;
+            Float maxDiscountGiven = product.getMaxDiscount();
+            SellingPriceGreater(sellingPrice, buyingPrice);
+            CheckMaxDiscount(maxDiscountMark, maxDiscountGiven);
+
             Date currentDate = new Date();
             if (existingProduct != null && existingProduct.getDeletionStatus() == DELETED) {
                 existingProduct.setActivationStatus(ACTIVE);
@@ -75,10 +93,10 @@ public class ProductBean {
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (
                 BadRequestException e) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity(e.getMessage()).build();
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
         } catch (
                 PersistenceException e) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
         } catch (
                 Exception e) {
             e.printStackTrace();
@@ -92,30 +110,71 @@ public class ProductBean {
         }
     }
 
-    public JsonResponse editProduct(Product editProduct) {
-        JsonResponse response = new JsonResponse(ERROR_CODE, ERROR_MESSAGE);
-        Date currentDate = new Date();
+    public Response editProduct(Product editProduct) {
         try {
-            if (editProduct != null) {
-                Product retrievedProduct = productDatabaseBean.getProduct_ById(editProduct.getId());
-                if (retrievedProduct != null) {
-                    if (retrievedProduct == editProduct) {
-                        response.setMessage("All the products fields are equal");
-                    } else {
-                        editProduct.setModifiedOn(currentDate);
-                        if (transactionProvider.updateEntity(retrievedProduct)) {
-                            response.setResponseCode(SUCCESS_CODE);
-                            response.setMessage("Product added successfully");
-                        }
-                    }
-                } else {
-                    response.setMessage("Product does not exist");
-                }
+            if (editProduct == null) {
+                throw new BadRequestException("Product is null");
             }
-        } catch (Exception e) {
+            Float sellingPrice = editProduct.getSellingPrice();
+            Float buyingPrice = editProduct.getBuyingPrice();
+            Float maxDiscountMark = sellingPrice - buyingPrice;
+            Float maxDiscountGiven = editProduct.getMaxDiscount();
+            SellingPriceGreater(sellingPrice, buyingPrice);
+            CheckMaxDiscount(maxDiscountMark, maxDiscountGiven);
+
+            Product retrievedProduct = productDatabaseBean.getProduct_ById(editProduct.getId());
+            if (editProduct.getName() != null) {
+                retrievedProduct.setName(editProduct.getName());
+            }
+            if (editProduct.getCategory() != null) {
+                retrievedProduct.setCategory(editProduct.getCategory());
+            }
+
+            if (buyingPrice != 0.0f) {
+                retrievedProduct.setBuyingPrice(buyingPrice);
+            }
+
+            if (sellingPrice != 0.0f) {
+                retrievedProduct.setSellingPrice(sellingPrice);
+            }
+
+            if (maxDiscountGiven != 0.0f) {
+                retrievedProduct.setMaxDiscount(maxDiscountGiven);
+            }
+            Date currentDate = new Date();
+            retrievedProduct.setModifiedOn(currentDate);
+
+            if (!transactionProvider.updateEntity(retrievedProduct)) {
+                throw new PersistenceException("Product was not updated successfully");
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("Message", "Product updated successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (
+                BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (
+                PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (
+                Exception e) {
             e.printStackTrace();
-        } finally {
-            return response;
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
+
+    //check whether selling price is greater than buying price
+    private void SellingPriceGreater(Float sellingPrice, Float buyingPrice) {
+        if (sellingPrice < buyingPrice) {
+            throw new BadRequestException("Selling price should be greater than buying price");
+        }
+    }
+
+    private void CheckMaxDiscount(Float maxDiscountMark, Float maxDiscountGiven) {
+        if (maxDiscountGiven > maxDiscountMark) {
+            throw new BadRequestException("Maximum discount should not exceed Ksh" + maxDiscountMark + " for this product");
+        }
+    }
+
+
 }
