@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
  *
  * @author lenny
  */
+@SuppressWarnings("ALL")
 @Stateless
 @Path("/category")
 @Produces({MediaType.APPLICATION_JSON})
@@ -48,8 +49,7 @@ public class CategoryAPI {
     @PUT
     @Path("delete")
     public Response deleteCategory(@QueryParam("categoryId") Integer categoryId) {
-        JsonResponse response = categoryBean.deleteCategory(categoryId);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return categoryBean.deleteCategory(categoryId);
     }
 
     @GET
