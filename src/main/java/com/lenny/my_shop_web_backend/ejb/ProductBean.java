@@ -189,17 +189,17 @@ public class ProductBean {
                 throw new BadRequestException("Product is empty");
             }
             Product product = productDatabaseBean.getProduct_ById(productId);
-            if(product == null){
+            if (product == null) {
                 throw new BadRequestException("This product does not exist");
             }
-            if(product.getStockQuantity() > 0){
+            if (product.getStockQuantity() > 0) {
                 throw new BadRequestException("You can not delete a product that has existing stock");
             }
             if (product.getSaleDetailList().size() > 0) {
                 throw new BadRequestException("This product is tied to a sale. You can not delete it.");
             }
             product.setDeletionStatus(DELETED);
-            if(!transactionProvider.updateEntity(product)){
+            if (!transactionProvider.updateEntity(product)) {
                 throw new PersistenceException("Product was not deleted successfully");
             }
 
@@ -228,27 +228,13 @@ public class ProductBean {
 
             HashMap<String, Object> res = new HashMap<>();
             List<Product> productList = productDatabaseBean.getProduct_ByCategoryId(categoryId);
-            if(productList.isEmpty()){
+            if (productList.isEmpty()) {
                 res.put("Message", "No product currently exist in this product");
-            }else{
-                List<HashMap<String, Object>> productsFetched = new ArrayList<>();
-                for(Product product:productList){
-                    HashMap<String, Object> productHashMap = new HashMap<>();
-                    productHashMap.put("productId",product.getId());
-                    productHashMap.put("name",product.getName());
-                    productHashMap.put("category",product.getCategory().getId());
-                    productHashMap.put("buyingPrice",assignTwoDecimal(product.getBuyingPrice()));
-                    productHashMap.put("sellingPrice",assignTwoDecimal(product.getSellingPrice()));
-                    productHashMap.put("maxDiscount",assignTwoDecimal(product.getMaxDiscount()));
-                    productHashMap.put("stockQuantity",product.getStockQuantity());
-                    productHashMap.put("activationStatus",product.getActivationStatus());
-                    productHashMap.put("restockStatus",product.getRestockStatus());
-                    productHashMap.put("modifiedOn",product.getModifiedOn());
-                    productHashMap.put("addedDate",product.getAddedDate());
-                    productsFetched.add(productHashMap);
-                }
-                res.put("products",productsFetched);
-                res.put("Message", "Products in "+category.getName()+" fetched successfully");
+            } else {
+                List products = new ArrayList<>();
+                saveProductInHashMap(productList, products);
+                res.put("products", products);
+                res.put("Message", "Products in " + category.getName() + " fetched successfully");
             }
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
@@ -261,8 +247,50 @@ public class ProductBean {
         }
     }
 
-    public String assignTwoDecimal(float floatNumber){
+    private void saveProductInHashMap(List<Product> productList, List productsFetched) {
+        for (Product product : productList) {
+            HashMap<String, Object> productHashMap = new HashMap<>();
+            productHashMap.put("productId", product.getId());
+            productHashMap.put("name", product.getName());
+            productHashMap.put("category", product.getCategory().getId());
+            productHashMap.put("buyingPrice", assignTwoDecimal(product.getBuyingPrice()));
+            productHashMap.put("sellingPrice", assignTwoDecimal(product.getSellingPrice()));
+            productHashMap.put("maxDiscount", assignTwoDecimal(product.getMaxDiscount()));
+            productHashMap.put("stockQuantity", product.getStockQuantity());
+            productHashMap.put("activationStatus", product.getActivationStatus());
+            productHashMap.put("restockStatus", product.getRestockStatus());
+            productHashMap.put("modifiedOn", product.getModifiedOn());
+            productHashMap.put("addedDate", product.getAddedDate());
+            productsFetched.add(productHashMap);
+        }
+    }
+
+    public String assignTwoDecimal(float floatNumber) {
         String stringNumber = String.format("%.2f", floatNumber);
         return stringNumber;
+    }
+
+    public Response getAllProducts() {
+        try {
+            List<Product> productList = productDatabaseBean.getAllProducts();
+            HashMap<String, Object> res = new HashMap<>();
+            if(productList.isEmpty()){
+                res.put("products",productList);
+                res.put("Message", "No products exist");
+            }else{
+                List products = new ArrayList<>();
+                saveProductInHashMap(productList, products);
+                res.put("products", products);
+                res.put("Message", "All products fetched successfully");
+            }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
     }
 }

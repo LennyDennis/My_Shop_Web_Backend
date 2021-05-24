@@ -78,4 +78,18 @@ public class ProductDatabaseBean {
         }
     }
 
+    public List<Product> getAllProducts() {
+        List productList = new ArrayList();
+        try {
+            EntityManager entityManager = transactionProvider.getEM();
+            Query query = entityManager.createQuery("SELECT p FROM Product p WHERE p.deletionStatus = :deletionStatus");
+            query.setParameter("deletionStatus", NOT_DELETED);
+            productList = transactionProvider.getManyFromQuery(query);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return productList;
+        }
+    }
+
 }

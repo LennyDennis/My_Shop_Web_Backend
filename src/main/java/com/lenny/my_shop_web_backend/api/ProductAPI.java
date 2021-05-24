@@ -49,4 +49,10 @@ public class ProductAPI {
         return productBean.getProducts_ByCategory(categoryId);
     }
 
+    @GET
+    @Path("/all")
+    public Response getAllProducts(){
+        return productBean.getAllProducts();
+    }
+
 }
