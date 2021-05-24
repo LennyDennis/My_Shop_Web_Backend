@@ -5,6 +5,7 @@
  */
 package com.lenny.my_shop_web_backend.ejb;
 
+import com.google.common.base.Strings;
 import com.lenny.my_shop_web_backend.ejb_db.CategoryDatabaseBean;
 import com.lenny.my_shop_web_backend.ejb_db.ProductDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.Category;
@@ -56,7 +57,7 @@ public class ProductBean {
             String productName = product.getName();
             Integer categoryId = product.getCategory().getId();
             Category existingCategory = categoryDatabaseBean.getCategory_ById(categoryId);
-            if(existingCategory == null){
+            if (existingCategory == null) {
                 throw new BadRequestException("Category selected does not exist");
             }
             Product existingProduct = productDatabaseBean.getProduct_ByCategory(productName, categoryId);
@@ -115,12 +116,17 @@ public class ProductBean {
             if (editProduct == null) {
                 throw new BadRequestException("Product is null");
             }
-            Float sellingPrice = editProduct.getSellingPrice();
-            Float buyingPrice = editProduct.getBuyingPrice();
-            Float maxDiscountMark = sellingPrice - buyingPrice;
-            Float maxDiscountGiven = editProduct.getMaxDiscount();
+            float sellingPrice = editProduct.getSellingPrice();
+            float buyingPrice = editProduct.getBuyingPrice();
+            float maxDiscountMark = sellingPrice - buyingPrice;
+            float maxDiscountGiven = editProduct.getMaxDiscount();
             SellingPriceGreater(sellingPrice, buyingPrice);
             CheckMaxDiscount(maxDiscountMark, maxDiscountGiven);
+            Integer categoryId = editProduct.getCategory().getId();
+            Category existingCategory = categoryDatabaseBean.getCategory_ById(categoryId);
+            if (existingCategory == null) {
+                throw new BadRequestException("Category selected does not exist");
+            }
 
             Product retrievedProduct = productDatabaseBean.getProduct_ById(editProduct.getId());
             if (editProduct.getName() != null) {
@@ -141,6 +147,11 @@ public class ProductBean {
             if (maxDiscountGiven != 0.0f) {
                 retrievedProduct.setMaxDiscount(maxDiscountGiven);
             }
+
+            if (editProduct.getActivationStatus() != null) {
+                retrievedProduct.setActivationStatus(editProduct.getActivationStatus());
+            }
+
             Date currentDate = new Date();
             retrievedProduct.setModifiedOn(currentDate);
 
@@ -176,5 +187,36 @@ public class ProductBean {
         }
     }
 
+    public Response deleteProduct(Integer productId) {
+        try {
+            if (productId == null) {
+                throw new BadRequestException("Product is empty");
+            }
+            Product product = productDatabaseBean.getProduct_ById(productId);
+            if(product == null){
+                throw new BadRequestException("This product does not exist");
+            }
+            if(product.getStockQuantity() > 0){
+                throw new BadRequestException("You can not delete a product that has existing stock");
+            }
+            if (product.getSaleDetailList().size() > 0) {
+                throw new BadRequestException("This product is tied to a sale. You can not delete it.");
+            }
+            product.setDeletionStatus(DELETED);
+            if(!transactionProvider.updateEntity(product)){
+                throw new PersistenceException("Product was not deleted successfully");
+            }
 
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("Message", "Product deleted successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
 }

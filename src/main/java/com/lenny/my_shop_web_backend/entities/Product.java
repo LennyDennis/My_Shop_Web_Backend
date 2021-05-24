@@ -44,11 +44,14 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Product.findByMaxDiscount", query = "SELECT p FROM Product p WHERE p.maxDiscount = :maxDiscount")
     , @NamedQuery(name = "Product.findByStockQuantity", query = "SELECT p FROM Product p WHERE p.stockQuantity = :stockQuantity")
     , @NamedQuery(name = "Product.findByActivationStatus", query = "SELECT p FROM Product p WHERE p.activationStatus = :activationStatus")
-    , @NamedQuery(name = "Product.findByDeletionStatus", query = "SELECT p FROM Product p WHERE p.deletionStatus = :deletionStatus")
     , @NamedQuery(name = "Product.findByRestockStatus", query = "SELECT p FROM Product p WHERE p.restockStatus = :restockStatus")
+    , @NamedQuery(name = "Product.findByDeletionStatus", query = "SELECT p FROM Product p WHERE p.deletionStatus = :deletionStatus")
     , @NamedQuery(name = "Product.findByModifiedOn", query = "SELECT p FROM Product p WHERE p.modifiedOn = :modifiedOn")
     , @NamedQuery(name = "Product.findByAddedDate", query = "SELECT p FROM Product p WHERE p.addedDate = :addedDate")})
 public class Product implements Serializable {
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
+    private List<SaleDetail> saleDetailList;
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -84,12 +87,12 @@ public class Product implements Serializable {
     private int activationStatus;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "deletion_status", nullable = false)
-    private int deletionStatus;
-    @Basic(optional = false)
-    @NotNull
     @Column(name = "restock_status", nullable = false)
     private int restockStatus;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "deletion_status", nullable = false)
+    private int deletionStatus;
     @Basic(optional = false)
     @NotNull
     @Column(name = "modified_on", nullable = false)
@@ -115,7 +118,7 @@ public class Product implements Serializable {
         this.id = id;
     }
 
-    public Product(Integer id, String name, float buyingPrice, float sellingPrice, float maxDiscount, int stockQuantity, int activationStatus, int deletionStatus, int restockStatus, Date modifiedOn, Date addedDate) {
+    public Product(Integer id, String name, float buyingPrice, float sellingPrice, float maxDiscount, int stockQuantity, int activationStatus, int restockStatus, int deletionStatus, Date modifiedOn, Date addedDate) {
         this.id = id;
         this.name = name;
         this.buyingPrice = buyingPrice;
@@ -123,8 +126,8 @@ public class Product implements Serializable {
         this.maxDiscount = maxDiscount;
         this.stockQuantity = stockQuantity;
         this.activationStatus = activationStatus;
-        this.deletionStatus = deletionStatus;
         this.restockStatus = restockStatus;
+        this.deletionStatus = deletionStatus;
         this.modifiedOn = modifiedOn;
         this.addedDate = addedDate;
     }
@@ -177,20 +180,12 @@ public class Product implements Serializable {
         this.stockQuantity = stockQuantity;
     }
 
-    public int getActivationStatus() {
+    public Integer getActivationStatus() {
         return activationStatus;
     }
 
     public void setActivationStatus(int activationStatus) {
         this.activationStatus = activationStatus;
-    }
-
-    public int getDeletionStatus() {
-        return deletionStatus;
-    }
-
-    public void setDeletionStatus(int deletionStatus) {
-        this.deletionStatus = deletionStatus;
     }
 
     public int getRestockStatus() {
@@ -199,6 +194,14 @@ public class Product implements Serializable {
 
     public void setRestockStatus(int restockStatus) {
         this.restockStatus = restockStatus;
+    }
+
+    public int getDeletionStatus() {
+        return deletionStatus;
+    }
+
+    public void setDeletionStatus(int deletionStatus) {
+        this.deletionStatus = deletionStatus;
     }
 
     public Date getModifiedOn() {
@@ -266,6 +269,15 @@ public class Product implements Serializable {
     @Override
     public String toString() {
         return "com.lenny.my_shop_web_backend.entities.Product[ id=" + id + " ]";
+    }
+
+    @XmlTransient
+    public List<SaleDetail> getSaleDetailList() {
+        return saleDetailList;
+    }
+
+    public void setSaleDetailList(List<SaleDetail> saleDetailList) {
+        this.saleDetailList = saleDetailList;
     }
     
 }

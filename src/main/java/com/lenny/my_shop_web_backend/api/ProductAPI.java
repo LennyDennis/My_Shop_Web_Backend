@@ -41,4 +41,10 @@ public class ProductAPI {
         return productBean.editProduct(product);
     }
 
+    @PUT()
+    @Path("delete")
+    public Response deleteProduct(@QueryParam("productId") Integer productId){
+        return productBean.deleteProduct(productId);
+    }
+
 }
