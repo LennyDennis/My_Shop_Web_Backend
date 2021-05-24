@@ -9,6 +9,8 @@ import com.lenny.my_shop_web_backend.ejb.ProductBean;
 import com.lenny.my_shop_web_backend.entities.Category;
 import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.utilities.JsonResponse;
+import jdk.nashorn.internal.objects.annotations.Getter;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.*;
@@ -53,6 +55,11 @@ public class ProductAPI {
     @Path("/all")
     public Response getAllProducts(){
         return productBean.getAllProducts();
+    }
+
+    @GET
+    public Response getProduct(@QueryParam("productId") Integer productId){
+        return productBean.getProduct_ById(productId);
     }
 
 }

@@ -250,19 +250,23 @@ public class ProductBean {
     private void saveProductInHashMap(List<Product> productList, List productsFetched) {
         for (Product product : productList) {
             HashMap<String, Object> productHashMap = new HashMap<>();
-            productHashMap.put("productId", product.getId());
-            productHashMap.put("name", product.getName());
-            productHashMap.put("category", product.getCategory().getId());
-            productHashMap.put("buyingPrice", assignTwoDecimal(product.getBuyingPrice()));
-            productHashMap.put("sellingPrice", assignTwoDecimal(product.getSellingPrice()));
-            productHashMap.put("maxDiscount", assignTwoDecimal(product.getMaxDiscount()));
-            productHashMap.put("stockQuantity", product.getStockQuantity());
-            productHashMap.put("activationStatus", product.getActivationStatus());
-            productHashMap.put("restockStatus", product.getRestockStatus());
-            productHashMap.put("modifiedOn", product.getModifiedOn());
-            productHashMap.put("addedDate", product.getAddedDate());
+            productDetailsHashMap(product, productHashMap);
             productsFetched.add(productHashMap);
         }
+    }
+
+    private void productDetailsHashMap(Product product, HashMap<String, Object> productHashMap) {
+        productHashMap.put("productId", product.getId());
+        productHashMap.put("name", product.getName());
+        productHashMap.put("category", product.getCategory().getId());
+        productHashMap.put("buyingPrice", assignTwoDecimal(product.getBuyingPrice()));
+        productHashMap.put("sellingPrice", assignTwoDecimal(product.getSellingPrice()));
+        productHashMap.put("maxDiscount", assignTwoDecimal(product.getMaxDiscount()));
+        productHashMap.put("stockQuantity", product.getStockQuantity());
+        productHashMap.put("activationStatus", product.getActivationStatus());
+        productHashMap.put("restockStatus", product.getRestockStatus());
+        productHashMap.put("modifiedOn", product.getModifiedOn());
+        productHashMap.put("addedDate", product.getAddedDate());
     }
 
     public String assignTwoDecimal(float floatNumber) {
@@ -274,15 +278,40 @@ public class ProductBean {
         try {
             List<Product> productList = productDatabaseBean.getAllProducts();
             HashMap<String, Object> res = new HashMap<>();
-            if(productList.isEmpty()){
-                res.put("products",productList);
+            if (productList.isEmpty()) {
+                res.put("products", productList);
                 res.put("Message", "No products exist");
-            }else{
+            } else {
                 List products = new ArrayList<>();
                 saveProductInHashMap(productList, products);
                 res.put("products", products);
                 res.put("Message", "All products fetched successfully");
             }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response getProduct_ById(Integer productId) {
+        try {
+            if (productId == null) {
+                throw new BadRequestException("ProductId is null");
+            }
+            Product product = productDatabaseBean.getProduct_ById(productId);
+            if (product == null) {
+                throw new BadRequestException("This product does not exist");
+            }
+            HashMap productDetail = new HashMap();
+            productDetailsHashMap(product, productDetail);
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("product",productDetail);
+            res.put("message", "Product deleted successfully");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
