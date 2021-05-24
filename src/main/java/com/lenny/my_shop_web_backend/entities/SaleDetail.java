@@ -13,6 +13,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -31,8 +33,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "SaleDetail.findAll", query = "SELECT s FROM SaleDetail s")
     , @NamedQuery(name = "SaleDetail.findById", query = "SELECT s FROM SaleDetail s WHERE s.id = :id")
-    , @NamedQuery(name = "SaleDetail.findBySale", query = "SELECT s FROM SaleDetail s WHERE s.sale = :sale")
-    , @NamedQuery(name = "SaleDetail.findByProduct", query = "SELECT s FROM SaleDetail s WHERE s.product = :product")
     , @NamedQuery(name = "SaleDetail.findBySellingPrice", query = "SELECT s FROM SaleDetail s WHERE s.sellingPrice = :sellingPrice")
     , @NamedQuery(name = "SaleDetail.findBySoldQuantity", query = "SELECT s FROM SaleDetail s WHERE s.soldQuantity = :soldQuantity")
     , @NamedQuery(name = "SaleDetail.findByModifiedOn", query = "SELECT s FROM SaleDetail s WHERE s.modifiedOn = :modifiedOn")
@@ -45,14 +45,6 @@ public class SaleDetail implements Serializable {
     @Basic(optional = false)
     @Column(name = "id", nullable = false)
     private Integer id;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "sale", nullable = false)
-    private int sale;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "product", nullable = false)
-    private int product;
     @Basic(optional = false)
     @NotNull
     @Column(name = "selling_price", nullable = false)
@@ -71,6 +63,12 @@ public class SaleDetail implements Serializable {
     @Column(name = "date", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date date;
+    @JoinColumn(name = "product", referencedColumnName = "id", nullable = false)
+    @ManyToOne(optional = false)
+    private Product product;
+    @JoinColumn(name = "sale", referencedColumnName = "id", nullable = false)
+    @ManyToOne(optional = false)
+    private Sale sale;
 
     public SaleDetail() {
     }
@@ -79,10 +77,8 @@ public class SaleDetail implements Serializable {
         this.id = id;
     }
 
-    public SaleDetail(Integer id, int sale, int product, float sellingPrice, int soldQuantity, Date modifiedOn, Date date) {
+    public SaleDetail(Integer id, float sellingPrice, int soldQuantity, Date modifiedOn, Date date) {
         this.id = id;
-        this.sale = sale;
-        this.product = product;
         this.sellingPrice = sellingPrice;
         this.soldQuantity = soldQuantity;
         this.modifiedOn = modifiedOn;
@@ -95,22 +91,6 @@ public class SaleDetail implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public int getSale() {
-        return sale;
-    }
-
-    public void setSale(int sale) {
-        this.sale = sale;
-    }
-
-    public int getProduct() {
-        return product;
-    }
-
-    public void setProduct(int product) {
-        this.product = product;
     }
 
     public float getSellingPrice() {
@@ -143,6 +123,22 @@ public class SaleDetail implements Serializable {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public Sale getSale() {
+        return sale;
+    }
+
+    public void setSale(Sale sale) {
+        this.sale = sale;
     }
 
     @Override

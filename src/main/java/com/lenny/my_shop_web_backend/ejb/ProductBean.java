@@ -5,7 +5,6 @@
  */
 package com.lenny.my_shop_web_backend.ejb;
 
-import com.google.common.base.Strings;
 import com.lenny.my_shop_web_backend.ejb_db.CategoryDatabaseBean;
 import com.lenny.my_shop_web_backend.ejb_db.ProductDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.Category;
@@ -14,15 +13,12 @@ import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ERROR_CODE;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ERROR_MESSAGE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.SUCCESS_CODE;
 
-import com.lenny.my_shop_web_backend.utilities.JsonResponse;
-
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
@@ -218,5 +214,55 @@ public class ProductBean {
             e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
+    }
+
+    public Response getProducts_ByCategory(Integer categoryId) {
+        try {
+            if (categoryId == null) {
+                throw new BadRequestException("Category selected is empty.Try again!");
+            }
+            Category category = categoryDatabaseBean.getCategory_ById(categoryId);
+            if (category == null) {
+                throw new BadRequestException("Category selected does not exist");
+            }
+
+            HashMap<String, Object> res = new HashMap<>();
+            List<Product> productList = productDatabaseBean.getProduct_ByCategoryId(categoryId);
+            if(productList.isEmpty()){
+                res.put("Message", "No product currently exist in this product");
+            }else{
+                List<HashMap<String, Object>> productsFetched = new ArrayList<>();
+                for(Product product:productList){
+                    HashMap<String, Object> productHashMap = new HashMap<>();
+                    productHashMap.put("productId",product.getId());
+                    productHashMap.put("name",product.getName());
+                    productHashMap.put("category",product.getCategory().getId());
+                    productHashMap.put("buyingPrice",assignTwoDecimal(product.getBuyingPrice()));
+                    productHashMap.put("sellingPrice",assignTwoDecimal(product.getSellingPrice()));
+                    productHashMap.put("maxDiscount",assignTwoDecimal(product.getMaxDiscount()));
+                    productHashMap.put("stockQuantity",product.getStockQuantity());
+                    productHashMap.put("activationStatus",product.getActivationStatus());
+                    productHashMap.put("restockStatus",product.getRestockStatus());
+                    productHashMap.put("modifiedOn",product.getModifiedOn());
+                    productHashMap.put("addedDate",product.getAddedDate());
+                    productsFetched.add(productHashMap);
+                }
+                res.put("products",productsFetched);
+                res.put("Message", "Products in "+category.getName()+" fetched successfully");
+            }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public String assignTwoDecimal(float floatNumber){
+        String stringNumber = String.format("%.2f", floatNumber);
+        return stringNumber;
     }
 }

@@ -11,11 +11,7 @@ import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.utilities.JsonResponse;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -41,10 +37,16 @@ public class ProductAPI {
         return productBean.editProduct(product);
     }
 
-    @PUT()
+    @PUT
     @Path("delete")
     public Response deleteProduct(@QueryParam("productId") Integer productId){
         return productBean.deleteProduct(productId);
+    }
+
+    @GET
+    @Path("category/products")
+    public Response getAllProduct_InCategory(@QueryParam("categoryId") Integer categoryId){
+        return productBean.getProducts_ByCategory(categoryId);
     }
 
 }

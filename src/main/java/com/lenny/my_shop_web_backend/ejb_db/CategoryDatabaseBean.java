@@ -62,7 +62,7 @@ public class CategoryDatabaseBean {
     }
 
     public List<Category> getAllCategories() {
-        List<Category> categories = new ArrayList();
+        List categories = new ArrayList();
         try {
             EntityManager em = provider.getEM();
             Query q = em.createQuery("SELECT c FROM Category c WHERE c.deletionStatus = :deletionStatus");

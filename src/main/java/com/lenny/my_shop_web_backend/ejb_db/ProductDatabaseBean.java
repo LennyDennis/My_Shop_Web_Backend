@@ -6,19 +6,19 @@
 package com.lenny.my_shop_web_backend.ejb_db;
 
 import com.lenny.my_shop_web_backend.entities.Category;
-import com.lenny.my_shop_web_backend.entities.Category_;
 import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVE;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
 
 /**
- *
  * @author lenny
  */
 @Stateless
@@ -58,6 +58,23 @@ public class ProductDatabaseBean {
             e.printStackTrace();
         } finally {
             return responseProduct;
+        }
+    }
+
+    public List<Product> getProduct_ByCategoryId(Integer categoryId) {
+        List categoryProducts = new ArrayList();
+        try {
+            if (categoryId != null) {
+                EntityManager entityManager = transactionProvider.getEM();
+                Query query = entityManager.createQuery("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.deletionStatus = :deletionStatus");
+                query.setParameter("categoryId", categoryId);
+                query.setParameter("deletionStatus", NOT_DELETED);
+                categoryProducts = transactionProvider.getManyFromQuery(query);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return categoryProducts;
         }
     }
 

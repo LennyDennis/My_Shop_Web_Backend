@@ -50,9 +50,6 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "Product.findByAddedDate", query = "SELECT p FROM Product p WHERE p.addedDate = :addedDate")})
 public class Product implements Serializable {
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
-    private List<SaleDetail> saleDetailList;
-
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -108,6 +105,8 @@ public class Product implements Serializable {
     @JoinColumn(name = "category", referencedColumnName = "id", nullable = false)
     @ManyToOne(optional = false)
     private Category category;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
+    private List<SaleDetail> saleDetailList;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
     private List<NewStock> newStockList;
 
@@ -238,6 +237,15 @@ public class Product implements Serializable {
     }
 
     @XmlTransient
+    public List<SaleDetail> getSaleDetailList() {
+        return saleDetailList;
+    }
+
+    public void setSaleDetailList(List<SaleDetail> saleDetailList) {
+        this.saleDetailList = saleDetailList;
+    }
+
+    @XmlTransient
     public List<NewStock> getNewStockList() {
         return newStockList;
     }
@@ -269,15 +277,6 @@ public class Product implements Serializable {
     @Override
     public String toString() {
         return "com.lenny.my_shop_web_backend.entities.Product[ id=" + id + " ]";
-    }
-
-    @XmlTransient
-    public List<SaleDetail> getSaleDetailList() {
-        return saleDetailList;
-    }
-
-    public void setSaleDetailList(List<SaleDetail> saleDetailList) {
-        this.saleDetailList = saleDetailList;
     }
     
 }
