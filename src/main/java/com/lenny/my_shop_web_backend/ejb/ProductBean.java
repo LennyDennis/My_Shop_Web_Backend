@@ -11,7 +11,7 @@ import com.lenny.my_shop_web_backend.entities.Category;
 import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVE;
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVATE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
 
@@ -70,7 +70,7 @@ public class ProductBean {
 
             Date currentDate = new Date();
             if (existingProduct != null && existingProduct.getDeletionStatus() == DELETED) {
-                existingProduct.setActivationStatus(ACTIVE);
+                existingProduct.setActivationStatus(ACTIVATE);
                 existingProduct.setRestockStatus(RESTOCK_STATUS_OFF);
                 existingProduct.setDeletionStatus(NOT_DELETED);
                 existingProduct.setModifiedOn(currentDate);
@@ -78,7 +78,7 @@ public class ProductBean {
                 saveNewProduct(existingProduct);
             } else {
                 product.setStockQuantity(ZERO_STOCK);
-                product.setActivationStatus(ACTIVE);
+                product.setActivationStatus(ACTIVATE);
                 product.setRestockStatus(RESTOCK_STATUS_OFF);
                 product.setDeletionStatus(NOT_DELETED);
                 product.setModifiedOn(currentDate);

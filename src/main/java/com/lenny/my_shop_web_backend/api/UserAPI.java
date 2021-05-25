@@ -34,9 +34,6 @@ public class UserAPI {
     
     @EJB
     UserBean userBean;
-    
-    @EJB
-    MailBean mailBean;
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
@@ -66,14 +63,19 @@ public class UserAPI {
 
     @GET
     @Path("role")
-    public Response getAllEmployees(@QueryParam("userRole") Integer userRole){
+    public Response getUser_ByRole(@QueryParam("userRole") Integer userRole){
         return userBean.getUser_ByRole(userRole);
     }
 
-//    @GET
-//    @Path("customer")
-//    public Response getAllCustomers(){
-//        return userBean.getAllCustomers();
-//    }
+    @PUT
+    public Response editUser(User user){
+        return userBean.editUser(user);
+    }
+
+    @PUT
+    @Path("delete")
+    public Response deleteUser(@QueryParam("userId") Integer userId){
+        return userBean.deleteUser(userId);
+    }
 
 }

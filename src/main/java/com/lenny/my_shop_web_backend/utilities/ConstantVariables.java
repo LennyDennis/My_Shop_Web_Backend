@@ -25,8 +25,8 @@ public final class ConstantVariables {
     public static final int ERROR_CODE = 500;
     
     //active status 
-    public static final int ACTIVE = 1;
-    public static final int NOT_ACTIVE = 0;
+    public static final int ACTIVATE = 1;
+    public static final int DEACTIVATE = 0;
 
     //response message 
     public static final String ERROR_MESSAGE = "An error has occured";

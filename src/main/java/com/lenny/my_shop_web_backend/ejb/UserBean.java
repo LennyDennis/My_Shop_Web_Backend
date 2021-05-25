@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.CUSTOMER_ROLE;
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 
 /**
  * @author lenny
@@ -70,9 +70,11 @@ public class UserBean {
                 BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
                 String encodedPassword = encoder.encode(user.getPassword());
                 user.setPassword(encodedPassword);
+                user.setModifiedOn(currentDate);
                 user.setRegisteredDate(currentDate);
                 UUID authKey = UUID.randomUUID();
                 user.setAuthKey(authKey.toString());
+                user.setActivationStatus(ACTIVATE);
                 user.setRegistrationStatus(ACCOUNT_NOT_ACTIVATED);
                 user.setDeletionStatus(ConstantVariables.NOT_DELETED);
                 if (userRole == ConstantVariables.ADMIN_ROLE) {
@@ -82,17 +84,15 @@ public class UserBean {
                 }
 
                 if (!provider.createEntity(user)) {
-                    throw new PersistenceException("User not saved succefully");
+                    throw new PersistenceException("User not saved successfully");
                 }
                 mailBean.sendActivationEmail(this.getUrlPrefix(), user.getEmail(), user.getName(), user.getAuthKey());
-                res.put("message", "User added succefully. User check email used to activate to the account");
+                res.put("message", "User added successfully. User check email used to activate to the account");
             } else {
-                User customerByPhone = userDbBean.getCustomer_ByPhone(user.getPhone());
-                if (customerByPhone != null) {
-                    throw new BadRequestException("There's already a customer registered to this number. Try again");
-                }
                 user.setRole(CUSTOMER_ROLE);
+                user.setModifiedOn(currentDate);
                 user.setRegisteredDate(currentDate);
+                user.setActivationStatus(ACTIVATE);
                 user.setRegistrationStatus(ACCOUNT_NOT_ACTIVATED);
                 user.setDeletionStatus(ConstantVariables.NOT_DELETED);
                 if (!provider.createEntity(user)) {
@@ -118,6 +118,8 @@ public class UserBean {
                 User userExists = userDbBean.getUser_ByAuthKey(authKey);
                 if (userExists != null) {
                     if (userExists.getRegistrationStatus() != ACCOUNT_ACTIVATED) {
+                        Date currentDate = new Date();
+                        userExists.setModifiedOn(currentDate);
                         userExists.setRegistrationStatus(ACCOUNT_ACTIVATED);
                         if (provider.updateEntity(userExists)) {
                             response.setResponseCode(200);
@@ -262,8 +264,92 @@ public class UserBean {
         userDetail.put("email", user.getEmail());
         userDetail.put("phone", user.getPhone());
         userDetail.put("role", user.getRole());
+        userDetail.put("activationStatus", user.getActivationStatus());
         userDetail.put("registrationStatus", user.getRegistrationStatus());
         userDetail.put("deletionStatus", user.getDeletionStatus());
         userDetail.put("registeredDate", user.getRegisteredDate());
+    }
+
+    public Response editUser(User user){
+        try {
+            if(user == null){
+                throw new BadRequestException("User is null");
+            }
+            int userId = user.getId();
+            User userToEdit = userDbBean.getUser_ById(userId);
+            if(userToEdit == null){
+                throw new BadRequestException("This user does not exist");
+            }
+            if(user.getName() != null){
+                userToEdit.setName(user.getName());
+            }
+            if(user.getEmail() != null){
+                userToEdit.setEmail(user.getEmail());
+            }
+            if(user.getPhone() != null){
+                userToEdit.setPhone(user.getPhone());
+            }
+            if(user.getRole() != null){
+                userToEdit.setRole(user.getRole());
+            }
+
+            if(user.getActivationStatus() != null){
+                int activationStatus;
+                if(user.getActivationStatus() == ACTIVATE){
+                    activationStatus = ACTIVATE;
+                }else{
+                    activationStatus = DEACTIVATE;
+                }
+                userToEdit.setRole(activationStatus);
+            }
+
+            Date currentDate = new Date();
+            userToEdit.setModifiedOn(currentDate);
+
+            if(!provider.updateEntity(userToEdit)){
+                throw new PersistenceException("User not updated successfully");
+            }
+
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("message","User updated successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response deleteUser(Integer userId){
+        try {
+            if(userId == null){
+                throw new BadRequestException("User is null");
+            }
+            User userToDelete = userDbBean.getUser_ById(userId);
+            if(userToDelete == null){
+                throw new BadRequestException("This user does not exist");
+            }
+            Date currentDate = new Date();
+            userToDelete.setModifiedOn(currentDate);
+            userToDelete.setDeletionStatus(DELETED);
+
+            if(!provider.updateEntity(userToDelete)){
+                throw new PersistenceException("User not deleted successfully");
+            }
+
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("message","User deleted successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
     }
 }

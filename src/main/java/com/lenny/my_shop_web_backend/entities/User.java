@@ -39,7 +39,9 @@ import javax.xml.bind.annotation.XmlTransient;
     , @NamedQuery(name = "User.findById", query = "SELECT u FROM User u WHERE u.id = :id")
     , @NamedQuery(name = "User.findByRole", query = "SELECT u FROM User u WHERE u.role = :role")
     , @NamedQuery(name = "User.findByRegistrationStatus", query = "SELECT u FROM User u WHERE u.registrationStatus = :registrationStatus")
+    , @NamedQuery(name = "User.findByActivationStatus", query = "SELECT u FROM User u WHERE u.activationStatus = :activationStatus")
     , @NamedQuery(name = "User.findByDeletionStatus", query = "SELECT u FROM User u WHERE u.deletionStatus = :deletionStatus")
+    , @NamedQuery(name = "User.findByModifiedOn", query = "SELECT u FROM User u WHERE u.modifiedOn = :modifiedOn")
     , @NamedQuery(name = "User.findByRegisteredDate", query = "SELECT u FROM User u WHERE u.registeredDate = :registeredDate")})
 public class User implements Serializable {
 
@@ -85,8 +87,17 @@ public class User implements Serializable {
     private int registrationStatus;
     @Basic(optional = false)
     @NotNull
+    @Column(name = "activation_status", nullable = false)
+    private int activationStatus;
+    @Basic(optional = false)
+    @NotNull
     @Column(name = "deletion_status", nullable = false)
     private int deletionStatus;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "modified_on", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date modifiedOn;
     @Basic(optional = false)
     @NotNull
     @Column(name = "registered_date", nullable = false)
@@ -106,13 +117,15 @@ public class User implements Serializable {
         this.id = id;
     }
 
-    public User(Integer id, String name, String phone, int role, int registrationStatus, int deletionStatus, Date registeredDate) {
+    public User(Integer id, String name, String phone, int role, int registrationStatus, int activationStatus, int deletionStatus, Date modifiedOn, Date registeredDate) {
         this.id = id;
         this.name = name;
         this.phone = phone;
         this.role = role;
         this.registrationStatus = registrationStatus;
+        this.activationStatus = activationStatus;
         this.deletionStatus = deletionStatus;
+        this.modifiedOn = modifiedOn;
         this.registeredDate = registeredDate;
     }
 
@@ -148,7 +161,7 @@ public class User implements Serializable {
         this.phone = phone;
     }
 
-    public int getRole() {
+    public Integer getRole() {
         return role;
     }
 
@@ -180,12 +193,28 @@ public class User implements Serializable {
         this.registrationStatus = registrationStatus;
     }
 
+    public Integer getActivationStatus() {
+        return activationStatus;
+    }
+
+    public void setActivationStatus(int activationStatus) {
+        this.activationStatus = activationStatus;
+    }
+
     public int getDeletionStatus() {
         return deletionStatus;
     }
 
     public void setDeletionStatus(int deletionStatus) {
         this.deletionStatus = deletionStatus;
+    }
+
+    public Date getModifiedOn() {
+        return modifiedOn;
+    }
+
+    public void setModifiedOn(Date modifiedOn) {
+        this.modifiedOn = modifiedOn;
     }
 
     public Date getRegisteredDate() {
