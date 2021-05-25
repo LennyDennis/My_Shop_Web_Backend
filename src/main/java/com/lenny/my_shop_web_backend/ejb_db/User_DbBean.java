@@ -12,7 +12,10 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.CUSTOMER_ROLE;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 
 /**
  *
@@ -30,8 +33,9 @@ public class User_DbBean {
             if (userEmail != null) {
                 EntityManager em = provider.getEM();
 
-                Query q = em.createQuery("SELECT u FROM User u WHERE u.email = :userEmail");
+                Query q = em.createQuery("SELECT u FROM User u WHERE u.email = :userEmail AND u.deletionStatus = :deletionStatus");
                 q.setParameter("userEmail", userEmail);
+                q.setParameter("deletionStatus", NOT_DELETED);
                 res = provider.getSingleResult(q);
             }
         } catch (Exception e) {
@@ -59,14 +63,15 @@ public class User_DbBean {
         }
     }
 
-    public User getUser_ById(String userId) {
+    public User getUser_ById(Integer userId) {
         User res = null;
         try {
             if (userId != null) {
                 EntityManager em = provider.getEM();
 
-                Query q = em.createQuery("SELECT u FROM User u WHERE u.id = :userId");
+                Query q = em.createQuery("SELECT u FROM User u WHERE u.id = :userId AND u.deletionStatus = :deletionStatus");
                 q.setParameter("userId", userId);
+                q.setParameter("deletionStatus", NOT_DELETED);
                 res = provider.getSingleResult(q);
             }
         } catch (Exception e) {
@@ -90,6 +95,37 @@ public class User_DbBean {
             e.printStackTrace();
         }finally{
            return userResponse;
+        }
+    }
+
+    public List<User> getAllCustomers(){
+        List customers = new ArrayList<>();
+        try {
+            EntityManager em = provider.getEM();
+            Query q = em.createQuery("SELECT u From User u WHERE u.role = :role AND u.deletionStatus = :deletionStatus");
+            q.setParameter("role", CUSTOMER_ROLE);
+            q.setParameter("deletionStatus", NOT_DELETED);
+            customers = provider.getManyFromQuery(q);
+        }catch (Exception e){
+
+        }finally {
+            return customers;
+        }
+    }
+
+    public List<User> getAllEmployees(){
+        List employees = new ArrayList<>();
+        try {
+            EntityManager em = provider.getEM();
+            Query q = em.createQuery("SELECT u From User u WHERE u.role = :adminRole OR u.role = :employeeRole AND u.deletionStatus = :deletionStatus");
+            q.setParameter("adminRole", ADMIN_ROLE);
+            q.setParameter("employeeRole", EMPLOYEE_ROLE);
+            q.setParameter("deletionStatus", NOT_DELETED);
+            employees = provider.getManyFromQuery(q);
+        }catch (Exception e){
+
+        }finally {
+            return employees;
         }
     }
 

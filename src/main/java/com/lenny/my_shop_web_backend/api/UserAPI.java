@@ -57,4 +57,23 @@ public class UserAPI {
         JsonResponse response = userBean.resendActivationEmail(email);
         return Response.ok(response.getResponseCode()).entity(response).build();
     }
+
+    @GET
+    @Path("user")
+    public Response getUserDetail(@QueryParam("userId") Integer userId){
+      return userBean.getUserDetail(userId);
+    }
+
+    @GET
+    @Path("role")
+    public Response getAllEmployees(@QueryParam("userRole") Integer userRole){
+        return userBean.getUser_ByRole(userRole);
+    }
+
+//    @GET
+//    @Path("customer")
+//    public Response getAllCustomers(){
+//        return userBean.getAllCustomers();
+//    }
+
 }

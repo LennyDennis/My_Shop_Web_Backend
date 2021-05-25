@@ -86,9 +86,9 @@ public class UserBean {
                 }
                 mailBean.sendActivationEmail(this.getUrlPrefix(), user.getEmail(), user.getName(), user.getAuthKey());
                 res.put("message", "User added succefully. User check email used to activate to the account");
-            }else{
+            } else {
                 User customerByPhone = userDbBean.getCustomer_ByPhone(user.getPhone());
-                if(customerByPhone != null){
+                if (customerByPhone != null) {
                     throw new BadRequestException("There's already a customer registered to this number. Try again");
                 }
                 user.setRole(CUSTOMER_ROLE);
@@ -111,71 +111,159 @@ public class UserBean {
         }
     }
 
-        public JsonResponse activateAccount (String authKey){
-            JsonResponse response = new JsonResponse(500, "An error has occured");
-            try {
-                if (authKey != null) {
-                    User userExists = userDbBean.getUser_ByAuthKey(authKey);
-                    if (userExists != null) {
-                        if (userExists.getRegistrationStatus() != ACCOUNT_ACTIVATED) {
-                            userExists.setRegistrationStatus(ACCOUNT_ACTIVATED);
-                            if (provider.updateEntity(userExists)) {
-                                response.setResponseCode(200);
-                                response.setMessage("Account activated");
-                            }
-                        } else {
+    public JsonResponse activateAccount(String authKey) {
+        JsonResponse response = new JsonResponse(500, "An error has occured");
+        try {
+            if (authKey != null) {
+                User userExists = userDbBean.getUser_ByAuthKey(authKey);
+                if (userExists != null) {
+                    if (userExists.getRegistrationStatus() != ACCOUNT_ACTIVATED) {
+                        userExists.setRegistrationStatus(ACCOUNT_ACTIVATED);
+                        if (provider.updateEntity(userExists)) {
                             response.setResponseCode(200);
-                            response.setMessage("Account already been activated");
+                            response.setMessage("Account activated");
                         }
                     } else {
-                        response.setMessage("User does not exists.");
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                return response;
-            }
-        }
-
-        public JsonResponse resendActivationEmail (String email){
-            JsonResponse response = new JsonResponse(500, "An error occured");
-            try {
-                if (email != null) {
-                    User user = userDbBean.getUser_ByEmail(email);
-                    if (user != null) {
-                        mailBean.sendActivationEmail(this.getUrlPrefix(), email, null, null);
                         response.setResponseCode(200);
-                        response.setMessage("The activation email has been resent");
-                    } else {
-                        response.setMessage("User with this email does not exist.");
+                        response.setMessage("Account already been activated");
                     }
+                } else {
+                    response.setMessage("User does not exists.");
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                return response;
             }
-        }
-
-        public String getUrlPrefix () {
-            String hostname = httpRequest.getServerName();
-            Integer port_number = httpRequest.getServerPort();
-            String context_path = httpRequest.getContextPath();
-            String port;
-
-            List<Integer> ignored_ports = new ArrayList();
-            ignored_ports.add(80);
-            ignored_ports.add(8080);
-            ignored_ports.add(443);
-
-            if (ignored_ports.contains(port_number)) {
-                port = "";
-            } else {
-                port = ":" + String.valueOf(port_number);
-            }
-
-            String url_prefix = "https://" + hostname + port + context_path + "/";
-            return url_prefix;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
         }
     }
+
+    public JsonResponse resendActivationEmail(String email) {
+        JsonResponse response = new JsonResponse(500, "An error occured");
+        try {
+            if (email != null) {
+                User user = userDbBean.getUser_ByEmail(email);
+                if (user != null) {
+                    mailBean.sendActivationEmail(this.getUrlPrefix(), email, null, null);
+                    response.setResponseCode(200);
+                    response.setMessage("The activation email has been resent");
+                } else {
+                    response.setMessage("User with this email does not exist.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return response;
+        }
+    }
+
+    public String getUrlPrefix() {
+        String hostname = httpRequest.getServerName();
+        Integer port_number = httpRequest.getServerPort();
+        String context_path = httpRequest.getContextPath();
+        String port;
+
+        List<Integer> ignored_ports = new ArrayList();
+        ignored_ports.add(80);
+        ignored_ports.add(8080);
+        ignored_ports.add(443);
+
+        if (ignored_ports.contains(port_number)) {
+            port = "";
+        } else {
+            port = ":" + String.valueOf(port_number);
+        }
+
+        String url_prefix = "https://" + hostname + port + context_path + "/";
+        return url_prefix;
+    }
+
+    public Response getUserDetail(Integer userId) {
+        try {
+            if (userId == null) {
+                throw new BadRequestException("User is equal to null");
+            }
+            User user = userDbBean.getUser_ById(userId);
+            if (user == null) {
+                throw new BadRequestException("This user does not exist");
+            }
+            HashMap<String, Object> userDetail = new HashMap<>();
+            userDetailHashMap(user, userDetail);
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("user", userDetail);
+            res.put("message", "User fetched successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response getUser_ByRole(Integer userRole) {
+        try {
+            if (userRole == null) {
+                throw new BadRequestException("Role is null");
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            //get all customers
+            if (userRole == CUSTOMER_ROLE) {
+                List<User> customers = userDbBean.getAllCustomers();
+                if (customers.isEmpty()) {
+                    res.put("message", "No customers exist");
+                } else {
+                    List customerList = new ArrayList();
+                    for (User customer : customers) {
+                        HashMap<String, Object> customerDetail = new HashMap<>();
+                        customerDetail.put("id", customer.getId());
+                        customerDetail.put("name", customer.getName());
+                        customerDetail.put("phone", customer.getPhone());
+                        customerDetail.put("role", customer.getRole());
+                        customerDetail.put("registeredDate", customer.getRegisteredDate());
+                        customerList.add(customerDetail);
+                    }
+                    res.put("message", "Customers fetched successfully");
+                    res.put("customers", customerList);
+                }
+                //get employees and admins
+            } else {
+                List<User> employees = userDbBean.getAllEmployees();
+                if (employees.isEmpty()) {
+                    res.put("message", "No customers exist");
+                } else {
+                    List employeesList = new ArrayList();
+                    for (User employee : employees) {
+                        HashMap<String, Object> userDetail = new HashMap<>();
+                        userDetailHashMap(employee, userDetail);
+                        employeesList.add(userDetail);
+                    }
+                    res.put("message", "Employees fetched successfully");
+                    res.put("employees", employeesList);
+                }
+            }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    private void userDetailHashMap(User user, HashMap<String, Object> userDetail) {
+        userDetail.put("id", user.getId());
+        userDetail.put("name", user.getName());
+        userDetail.put("email", user.getEmail());
+        userDetail.put("phone", user.getPhone());
+        userDetail.put("role", user.getRole());
+        userDetail.put("registrationStatus", user.getRegistrationStatus());
+        userDetail.put("deletionStatus", user.getDeletionStatus());
+        userDetail.put("registeredDate", user.getRegisteredDate());
+    }
+}
