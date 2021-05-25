@@ -12,6 +12,8 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.CUSTOMER_ROLE;
+
 /**
  *
  * @author lenny
@@ -39,14 +41,15 @@ public class User_DbBean {
         }
     }
 
-    public User getUser_ByPhone(String userPhone) {
+    public User getCustomer_ByPhone(String userPhone) {
         User res = null;
         try {
             if (userPhone != null) {
                 EntityManager em = provider.getEM();
 
-                Query q = em.createQuery("SELECT u FROM User u WHERE u.phone = :userPhone");
+                Query q = em.createQuery("SELECT u FROM User u WHERE u.phone = :userPhone AND u.role = :role");
                 q.setParameter("userPhone", userPhone);
+                q.setParameter("role", CUSTOMER_ROLE);
                 res = provider.getSingleResult(q);
             }
         } catch (Exception e) {

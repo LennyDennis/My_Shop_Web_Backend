@@ -41,8 +41,7 @@ public class UserAPI {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     public Response registerUser(User user) {
-        JsonResponse response = userBean.registerUser(user);
-        return Response.ok(response.getResponseCode()).entity(response).build();
+        return userBean.registerUser(user);
     }
     
     @GET
