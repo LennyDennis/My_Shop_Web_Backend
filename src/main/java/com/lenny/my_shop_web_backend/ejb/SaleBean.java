@@ -141,7 +141,7 @@ public class SaleBean {
             if(balanceId == null){
                 throw new BadRequestException("Balance is null");
             }
-            Sale balance = saleDatabaseBean.getSale_ById(balanceId);
+            Sale balance = saleDatabaseBean.getSaleBalance_ById(balanceId);
             if(balance == null){
                 throw new BadRequestException("This sale does not exist");
             }
@@ -152,6 +152,47 @@ public class SaleBean {
             HashMap<String, Object> res = new HashMap<>();
             res.put("balance", balanceInfoList);
             res.put("message", "Balance fetched successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response clearBalance(Sale sale){
+        try{
+            if(sale == null){
+                throw new BadRequestException("Balance is null");
+            }
+            Sale balanceToClear = saleDatabaseBean.getSaleBalance_ById(sale.getId());
+            if(balanceToClear == null){
+                throw new BadRequestException("This sale does not have any balance");
+            }
+            float originalBalance = balanceToClear.getBalance();
+            float balancePaid = sale.getCashPaid();
+            if(balancePaid > originalBalance){
+                throw new BadRequestException("Error! Cash paid is greater than existing balance");
+            }
+            float totalCashPaid = balanceToClear.getCashPaid() + balancePaid;
+            float remainingBalance = balanceToClear.getTotalCost() - totalCashPaid;
+            Float newBalance = null;
+            if(remainingBalance > 0){
+                newBalance = remainingBalance;
+            }
+            Date currentDate = new Date();
+            balanceToClear.setCashPaid(totalCashPaid);
+            balanceToClear.setBalance(newBalance);
+            balanceToClear.setModifiedOn(currentDate);
+
+            if(!provider.createEntity(balanceToClear)){
+                throw new PersistenceException("Balance not paid successfully");
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("message", "Balance paid successfully");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();

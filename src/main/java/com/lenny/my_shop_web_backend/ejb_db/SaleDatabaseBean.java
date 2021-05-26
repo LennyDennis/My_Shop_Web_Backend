@@ -45,19 +45,19 @@ public class SaleDatabaseBean {
         }
     }
 
-    public Sale getSale_ById(Integer saleId) {
-        Sale sale = null;
+    public Sale getSaleBalance_ById(Integer saleBalanceId) {
+        Sale saleBalance = null;
         try {
-            if (saleId != null) {
+            if (saleBalanceId != null) {
                 EntityManager em = transactionProvider.getEM();
-                Query q = em.createQuery("SELECT s FROM Sale s WHERE s.id = :saleId");
-                q.setParameter("saleId", saleId);
-                sale = transactionProvider.getSingleResult(q);
+                Query q = em.createQuery("SELECT s FROM Sale s WHERE s.id = :saleId AND s.balance IS NOT NULL");
+                q.setParameter("saleId", saleBalanceId);
+                saleBalance = transactionProvider.getSingleResult(q);
             }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            return sale;
+            return saleBalance;
         }
     }
 }
