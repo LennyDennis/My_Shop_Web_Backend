@@ -6,7 +6,7 @@
 package com.lenny.my_shop_web_backend.ejb;
 
 import com.google.common.base.Strings;
-import com.lenny.my_shop_web_backend.ejb_db.User_DbBean;
+import com.lenny.my_shop_web_backend.ejb_db.UserDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.User;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import com.lenny.my_shop_web_backend.utilities.ConstantVariables;
@@ -39,7 +39,7 @@ public class UserBean {
     TransactionProvider provider;
 
     @EJB
-    private User_DbBean userDbBean;
+    private UserDatabaseBean userDbBean;
 
     @EJB
     private MailBean mailBean;

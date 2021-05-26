@@ -107,7 +107,7 @@ public class User implements Serializable {
     private List<Notification> notificationList;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "seller")
     private List<Sale> saleList;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer")
+    @OneToMany(mappedBy = "customer")
     private List<Sale> saleList1;
 
     public User() {

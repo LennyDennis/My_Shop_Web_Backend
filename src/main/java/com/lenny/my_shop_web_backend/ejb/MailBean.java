@@ -5,9 +5,8 @@
  */
 package com.lenny.my_shop_web_backend.ejb;
 
-import com.lenny.my_shop_web_backend.ejb_db.User_DbBean;
+import com.lenny.my_shop_web_backend.ejb_db.UserDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.User;
-import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import com.lenny.my_shop_web_backend.utilities.Mail;
 import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
@@ -21,7 +20,7 @@ import javax.ejb.Stateless;
 public class MailBean {
 
     @EJB
-    private User_DbBean userDbBean;
+    private UserDatabaseBean userDbBean;
 
     @Asynchronous
     public void sendActivationEmail(String urlPrefix, String email, String name, String authKey) {

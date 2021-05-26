@@ -38,6 +38,7 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Sale.findAll", query = "SELECT s FROM Sale s")
     , @NamedQuery(name = "Sale.findById", query = "SELECT s FROM Sale s WHERE s.id = :id")
     , @NamedQuery(name = "Sale.findByTotalCost", query = "SELECT s FROM Sale s WHERE s.totalCost = :totalCost")
+    , @NamedQuery(name = "Sale.findByCashPaid", query = "SELECT s FROM Sale s WHERE s.cashPaid = :cashPaid")
     , @NamedQuery(name = "Sale.findByBalance", query = "SELECT s FROM Sale s WHERE s.balance = :balance")
     , @NamedQuery(name = "Sale.findByModifiedOn", query = "SELECT s FROM Sale s WHERE s.modifiedOn = :modifiedOn")
     , @NamedQuery(name = "Sale.findBySellDate", query = "SELECT s FROM Sale s WHERE s.sellDate = :sellDate")})
@@ -55,8 +56,11 @@ public class Sale implements Serializable {
     private float totalCost;
     @Basic(optional = false)
     @NotNull
-    @Column(name = "balance", nullable = false)
-    private float balance;
+    @Column(name = "cash_paid", nullable = false)
+    private float cashPaid;
+    // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
+    @Column(name = "balance", precision = 12)
+    private Float balance;
     @Basic(optional = false)
     @NotNull
     @Column(name = "modified_on", nullable = false)
@@ -70,8 +74,8 @@ public class Sale implements Serializable {
     @JoinColumn(name = "seller", referencedColumnName = "id", nullable = false)
     @ManyToOne(optional = false)
     private User seller;
-    @JoinColumn(name = "customer", referencedColumnName = "id", nullable = false)
-    @ManyToOne(optional = false)
+    @JoinColumn(name = "customer", referencedColumnName = "id")
+    @ManyToOne
     private User customer;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "sale")
     private List<SaleDetail> saleDetailList;
@@ -83,10 +87,10 @@ public class Sale implements Serializable {
         this.id = id;
     }
 
-    public Sale(Integer id, float totalCost, float balance, Date modifiedOn, Date sellDate) {
+    public Sale(Integer id, float totalCost, float cashPaid, Date modifiedOn, Date sellDate) {
         this.id = id;
         this.totalCost = totalCost;
-        this.balance = balance;
+        this.cashPaid = cashPaid;
         this.modifiedOn = modifiedOn;
         this.sellDate = sellDate;
     }
@@ -107,11 +111,19 @@ public class Sale implements Serializable {
         this.totalCost = totalCost;
     }
 
-    public float getBalance() {
+    public float getCashPaid() {
+        return cashPaid;
+    }
+
+    public void setCashPaid(float cashPaid) {
+        this.cashPaid = cashPaid;
+    }
+
+    public Float getBalance() {
         return balance;
     }
 
-    public void setBalance(float balance) {
+    public void setBalance(Float balance) {
         this.balance = balance;
     }
 

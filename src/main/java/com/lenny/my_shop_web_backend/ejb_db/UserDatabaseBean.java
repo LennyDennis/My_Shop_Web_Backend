@@ -22,7 +22,7 @@ import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
  * @author lenny
  */
 @Stateless
-public class User_DbBean {
+public class UserDatabaseBean {
 
     @EJB
     private TransactionProvider provider;
@@ -71,6 +71,25 @@ public class User_DbBean {
 
                 Query q = em.createQuery("SELECT u FROM User u WHERE u.id = :userId AND u.deletionStatus = :deletionStatus");
                 q.setParameter("userId", userId);
+                q.setParameter("deletionStatus", NOT_DELETED);
+                res = provider.getSingleResult(q);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return res;
+        }
+    }
+
+    public User getSeller_ById(Integer userId) {
+        User res = null;
+        try {
+            if (userId != null) {
+                EntityManager em = provider.getEM();
+
+                Query q = em.createQuery("SELECT u FROM User u WHERE u.id = :userId AND u.activationStatus = :activationStatus AND u.deletionStatus = :deletionStatus");
+                q.setParameter("userId", userId);
+                q.setParameter("activationStatus", ACTIVATE);
                 q.setParameter("deletionStatus", NOT_DELETED);
                 res = provider.getSingleResult(q);
             }
