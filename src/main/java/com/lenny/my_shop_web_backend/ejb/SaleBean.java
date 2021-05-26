@@ -136,6 +136,33 @@ public class SaleBean {
         }
     }
 
+    public Response getBalance_ById(Integer balanceId){
+        try{
+            if(balanceId == null){
+                throw new BadRequestException("Balance is null");
+            }
+            Sale balance = saleDatabaseBean.getSale_ById(balanceId);
+            if(balance == null){
+                throw new BadRequestException("This sale does not exist");
+            }
+            List<Sale> balances = new ArrayList<>();
+            balances.add(balance);
+            List<HashMap<String, Object>> balanceInfoList = new ArrayList<>();
+            getAllSaleInfo(balances,balanceInfoList);
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("balance", balanceInfoList);
+            res.put("message", "Balance fetched successfully");
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
     private void getAllSaleInfo(List<Sale> sales,List<HashMap<String, Object>> saleInfoList ){
         for(Sale sale:sales){
             HashMap<String,Object> saleInfoHashMap = new HashMap<>();

@@ -32,8 +32,8 @@ public class SaleDatabaseBean {
         }
     }
 
-    public List<Sale> getAllBalances(){
-        List<Sale> balanceList = new ArrayList<>();
+    public List<Sale> getAllBalances() {
+        List balanceList = new ArrayList<>();
         try {
             EntityManager em = transactionProvider.getEM();
             Query q = em.createQuery("SELECT s FROM Sale s WHERE s.balance IS NOT NULL");
@@ -42,6 +42,22 @@ public class SaleDatabaseBean {
             e.printStackTrace();
         } finally {
             return balanceList;
+        }
+    }
+
+    public Sale getSale_ById(Integer saleId) {
+        Sale sale = null;
+        try {
+            if (saleId != null) {
+                EntityManager em = transactionProvider.getEM();
+                Query q = em.createQuery("SELECT s FROM Sale s WHERE s.id = :saleId");
+                q.setParameter("saleId", saleId);
+                sale = transactionProvider.getSingleResult(q);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return sale;
         }
     }
 }
