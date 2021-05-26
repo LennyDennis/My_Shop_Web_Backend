@@ -86,7 +86,6 @@ public class UserDatabaseBean {
         try {
             if (userId != null) {
                 EntityManager em = provider.getEM();
-
                 Query q = em.createQuery("SELECT u FROM User u WHERE u.id = :userId AND u.activationStatus = :activationStatus AND u.deletionStatus = :deletionStatus");
                 q.setParameter("userId", userId);
                 q.setParameter("activationStatus", ACTIVATE);

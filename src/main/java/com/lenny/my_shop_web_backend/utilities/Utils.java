@@ -41,4 +41,9 @@ public class Utils {
         return url_prefix;
     }
 
+    public static String assignTwoDecimal(float floatNumber) {
+        String stringNumber = String.format("%.2f", floatNumber);
+        return stringNumber;
+    }
+
 }

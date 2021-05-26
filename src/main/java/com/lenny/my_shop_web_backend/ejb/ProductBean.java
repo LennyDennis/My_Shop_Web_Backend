@@ -10,10 +10,12 @@ import com.lenny.my_shop_web_backend.ejb_db.ProductDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.Category;
 import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
+import com.lenny.my_shop_web_backend.utilities.Utils;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVATE;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
+import static com.lenny.my_shop_web_backend.utilities.Utils.assignTwoDecimal;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -267,11 +269,6 @@ public class ProductBean {
         productHashMap.put("restockStatus", product.getRestockStatus());
         productHashMap.put("modifiedOn", product.getModifiedOn());
         productHashMap.put("addedDate", product.getAddedDate());
-    }
-
-    public String assignTwoDecimal(float floatNumber) {
-        String stringNumber = String.format("%.2f", floatNumber);
-        return stringNumber;
     }
 
     public Response getAllProducts() {
