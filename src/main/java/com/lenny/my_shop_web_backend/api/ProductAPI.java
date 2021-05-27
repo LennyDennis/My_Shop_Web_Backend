@@ -68,4 +68,10 @@ public class ProductAPI {
         return productBean.getOutOfStockProducts();
     }
 
+    @PUT
+    @Path("restock")
+    public Response restockProduct(@QueryParam("productId") Integer productId, @QueryParam("newStock") Integer newStock){
+        return productBean.restockProduct(productId,newStock);
+    }
+
 }

@@ -12,15 +12,10 @@ import com.lenny.my_shop_web_backend.entities.Product;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import com.lenny.my_shop_web_backend.utilities.Utils;
 
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.ACTIVATE;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.DELETED;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 import static com.lenny.my_shop_web_backend.utilities.Utils.assignTwoDecimal;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
@@ -332,6 +327,41 @@ public class ProductBean {
                 res.put("products", outOfStockList);
                 res.put("message", "Out of stock products fetched successfully");
             }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response restockProduct(Integer productId,Integer newStockQuantity){
+        try {
+            if(Objects.isNull(productId)){
+                throw new BadRequestException("Product is null");
+            }
+            if(Objects.isNull(newStockQuantity)){
+                throw new BadRequestException("New stock quantity is null");
+            }
+            Product product = productDatabaseBean.getProduct_ById(productId);
+            if(Objects.isNull(product)){
+                throw new BadRequestException("Product does not exist");
+            }
+            int currentStock = product.getStockQuantity();
+            Integer newStock = currentStock + newStockQuantity;
+            Integer restockStatus = product.getRestockStatus();
+            product.setStockQuantity(newStock);
+            if(newStock >= MIN_RESTOCK_ACTIVATION_NUMBER && restockStatus.equals(RESTOCK_STATUS_ON)){
+                product.setRestockStatus(RESTOCK_STATUS_OFF);
+            }
+            if(!transactionProvider.updateEntity(product)){
+                throw new PersistenceException("Product stock was not updated successfully");
+            }
+            HashMap<String, Object> res = new HashMap<>();
+            res.put("message", "Stock updated successfully");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
