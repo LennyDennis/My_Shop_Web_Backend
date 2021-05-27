@@ -28,6 +28,10 @@ public final class ConstantVariables {
     public static final int ACTIVATE = 1;
     public static final int DEACTIVATE = 0;
 
+    //restock status
+    public static final int RESTOCK_ON = 1;
+    public static final int RESTOCK_OFF = 0;
+
     //response message 
     public static final String ERROR_MESSAGE = "An error has occured";
 

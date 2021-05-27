@@ -62,4 +62,10 @@ public class ProductAPI {
         return productBean.getProduct_ById(productId);
     }
 
+    @GET
+    @Path("outOfStock")
+    public Response getOutOfStockProducts(){
+        return productBean.getOutOfStockProducts();
+    }
+
 }

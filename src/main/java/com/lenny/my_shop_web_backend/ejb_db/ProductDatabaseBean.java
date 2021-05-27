@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
+import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.RESTOCK_ON;
 
 /**
  * @author lenny
@@ -90,6 +91,13 @@ public class ProductDatabaseBean {
         } finally {
             return productList;
         }
+    }
+
+    public List<Product> getOutOfStockProducts(){
+        EntityManager entityManager = transactionProvider.getEM();
+        Query query = entityManager.createQuery("SELECT p FROM Product p WHERE p.restockStatus = :restockStatus");
+        query.setParameter("restockStatus", RESTOCK_ON);
+        return transactionProvider.getManyFromQuery(query);
     }
 
 }

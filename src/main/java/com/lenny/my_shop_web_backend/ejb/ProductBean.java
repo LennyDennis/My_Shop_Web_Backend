@@ -319,4 +319,27 @@ public class ProductBean {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
         }
     }
+
+    public Response getOutOfStockProducts(){
+        try{
+            List<Product> outOfStockProducts = productDatabaseBean.getOutOfStockProducts();
+            HashMap<String, Object> res = new HashMap<>();
+            if(outOfStockProducts.isEmpty()){
+                res.put("message", "No out of stock products exists");
+            }else{
+                List outOfStockList = new ArrayList<>();
+                saveProductInHashMap(outOfStockProducts, outOfStockList);
+                res.put("products", outOfStockList);
+                res.put("message", "Out of stock products fetched successfully");
+            }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
 }
