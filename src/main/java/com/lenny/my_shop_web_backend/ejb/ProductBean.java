@@ -5,16 +5,22 @@
  */
 package com.lenny.my_shop_web_backend.ejb;
 
+import com.google.common.base.Strings;
 import com.lenny.my_shop_web_backend.ejb_db.CategoryDatabaseBean;
 import com.lenny.my_shop_web_backend.ejb_db.ProductDatabaseBean;
 import com.lenny.my_shop_web_backend.entities.Category;
+import com.lenny.my_shop_web_backend.entities.NewStock;
 import com.lenny.my_shop_web_backend.entities.Product;
+import com.lenny.my_shop_web_backend.entities.SaleDetail;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
-import com.lenny.my_shop_web_backend.utilities.Utils;
+import com.lenny.my_shop_web_backend.utilities.ValuesFromHashMap;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
 import static com.lenny.my_shop_web_backend.utilities.Utils.assignTwoDecimal;
+import static com.lenny.my_shop_web_backend.utilities.Utils.getDateFromMilliSeconds;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -122,7 +128,12 @@ public class ProductBean {
             }
 
             Product retrievedProduct = productDatabaseBean.getProduct_ById(editProduct.getId());
-            if (editProduct.getName() != null) {
+
+            if (!Strings.isNullOrEmpty(editProduct.getName()) && !editProduct.getName().equals(retrievedProduct.getName())) {
+                Product existingProduct = productDatabaseBean.getProduct_ByCategory(editProduct.getName(), categoryId);
+                if (existingProduct != null && existingProduct.getDeletionStatus() == NOT_DELETED) {
+                    throw new BadRequestException("Product " + existingProduct.getName() + " already exists in this category");
+                }
                 retrievedProduct.setName(editProduct.getName());
             }
             if (editProduct.getCategory() != null) {
@@ -141,9 +152,9 @@ public class ProductBean {
                 retrievedProduct.setMaxDiscount(maxDiscountGiven);
             }
 
-            if (editProduct.getActivationStatus() != null) {
-                retrievedProduct.setActivationStatus(editProduct.getActivationStatus());
-            }
+//            if (editProduct.getActivationStatus() != null) {
+//                retrievedProduct.setActivationStatus(editProduct.getActivationStatus());
+//            }
 
             Date currentDate = new Date();
             retrievedProduct.setModifiedOn(currentDate);
@@ -228,7 +239,7 @@ public class ProductBean {
             if (productList.isEmpty()) {
                 res.put("Message", "No product currently exist in this product");
             } else {
-                List products = new ArrayList<>();
+                List<Object> products = new ArrayList<>();
                 saveProductInHashMap(productList, products);
                 res.put("products", products);
                 res.put("Message", "Products in " + category.getName() + " fetched successfully");
@@ -244,7 +255,7 @@ public class ProductBean {
         }
     }
 
-    private void saveProductInHashMap(List<Product> productList, List productsFetched) {
+    private void saveProductInHashMap(List<Product> productList, List<Object> productsFetched) {
         for (Product product : productList) {
             HashMap<String, Object> productHashMap = new HashMap<>();
             productDetailsHashMap(product, productHashMap);
@@ -255,7 +266,8 @@ public class ProductBean {
     private void productDetailsHashMap(Product product, HashMap<String, Object> productHashMap) {
         productHashMap.put("productId", product.getId());
         productHashMap.put("name", product.getName());
-        productHashMap.put("category", product.getCategory().getId());
+        productHashMap.put("category", product.getCategory().getName());
+        productHashMap.put("categoryId", product.getCategory().getId());
         productHashMap.put("buyingPrice", assignTwoDecimal(product.getBuyingPrice()));
         productHashMap.put("sellingPrice", assignTwoDecimal(product.getSellingPrice()));
         productHashMap.put("maxDiscount", assignTwoDecimal(product.getMaxDiscount()));
@@ -274,10 +286,51 @@ public class ProductBean {
                 res.put("products", productList);
                 res.put("Message", "No products exist");
             } else {
-                List products = new ArrayList<>();
+                List<Object> products = new ArrayList<>();
                 saveProductInHashMap(productList, products);
                 res.put("products", products);
                 res.put("Message", "All products fetched successfully");
+            }
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public Response getMostSoldProducts() {
+        try {
+            List<SaleDetail> saleDetailList = productDatabaseBean.getProductSaleDetail();
+            HashMap<String, Object> res = new HashMap<>();
+            if (saleDetailList.isEmpty()) {
+                res.put("mostSold", saleDetailList);
+                res.put("Message", "No products sold");
+            } else {
+                List<Object> products = new ArrayList<>();
+                List<Object> mostSoldProducts = new ArrayList<>();
+                for(SaleDetail saleDetail:saleDetailList){
+                    HashMap<String, Object> mostSoldProduct = new HashMap<>();
+                    if(!products.contains(saleDetail.getProduct())){
+                        products.add(saleDetail.getProduct());
+                        mostSoldProduct.put("product",saleDetail.getProduct().getName());
+                        List<SaleDetail> productSaleDetails = productDatabaseBean.getProductSaleDetail_ByProduct(saleDetail.getProduct());
+                        Integer soldQuantity = 0;
+                        for(SaleDetail productSaleDetail: productSaleDetails){
+                            soldQuantity += productSaleDetail.getSoldQuantity();
+                        }
+                        mostSoldProduct.put("soldProducts",soldQuantity);
+                        mostSoldProduct.put("category",saleDetail.getProduct().getCategory().getName());
+                        mostSoldProduct.put("stockQuantity",saleDetail.getProduct().getStockQuantity());
+                        mostSoldProduct.put("lastRestock", getDateFromMilliSeconds(saleDetail.getProduct().getModifiedOn()));
+                        mostSoldProducts.add(mostSoldProduct);
+                    }
+                }
+                res.put("mostSold", mostSoldProducts);
+                res.put("Message", "Fetched successfully");
             }
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
@@ -299,7 +352,7 @@ public class ProductBean {
             if (product == null) {
                 throw new BadRequestException("This product does not exist");
             }
-            HashMap productDetail = new HashMap();
+            HashMap<String, Object> productDetail = new HashMap<String, Object>();
             productDetailsHashMap(product, productDetail);
             HashMap<String, Object> res = new HashMap<>();
             res.put("product",productDetail);
@@ -322,7 +375,7 @@ public class ProductBean {
             if(outOfStockProducts.isEmpty()){
                 res.put("message", "No out of stock products exists");
             }else{
-                List outOfStockList = new ArrayList<>();
+                List<Object> outOfStockList = new ArrayList<>();
                 saveProductInHashMap(outOfStockProducts, outOfStockList);
                 res.put("products", outOfStockList);
                 res.put("message", "Out of stock products fetched successfully");
@@ -350,13 +403,24 @@ public class ProductBean {
             if(Objects.isNull(product)){
                 throw new BadRequestException("Product does not exist");
             }
+            Date currentDate = new Date();
             int currentStock = product.getStockQuantity();
             Integer newStock = currentStock + newStockQuantity;
             Integer restockStatus = product.getRestockStatus();
             product.setStockQuantity(newStock);
+            product.setModifiedOn(currentDate);
             if(newStock >= MIN_RESTOCK_ACTIVATION_NUMBER && restockStatus.equals(RESTOCK_STATUS_ON)){
                 product.setRestockStatus(RESTOCK_STATUS_OFF);
             }
+            NewStock newStockRecord = new NewStock();
+            newStockRecord.setProduct(product);
+            newStockRecord.setStock(newStockQuantity);
+            newStockRecord.setDate(currentDate);
+
+            if(!transactionProvider.createEntity(newStockRecord)){
+                throw new PersistenceException("Stock record added successfully");
+            }
+
             if(!transactionProvider.updateEntity(product)){
                 throw new PersistenceException("Product stock was not updated successfully");
             }

@@ -5,7 +5,10 @@
  */
 package com.lenny.my_shop_web_backend.utilities;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.servlet.http.HttpServletRequest;
@@ -44,6 +47,13 @@ public class Utils {
     public static String assignTwoDecimal(float floatNumber) {
         String stringNumber = String.format("%.2f", floatNumber);
         return stringNumber;
+    }
+
+    public static String getDateFromMilliSeconds(Date date){
+        Date milliSeconds = date;
+        Date currentDate = new Date(milliSeconds.getTime());
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        return  df.format(currentDate);
     }
 
 }

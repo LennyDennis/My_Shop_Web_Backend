@@ -22,7 +22,6 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 /**
- *
  * @author lenny
  */
 @Stateless
@@ -41,7 +40,7 @@ public class TransactionProvider {
             if (o != null) {
                 em.persist(o);
                 em.flush();
-        }
+            }
             res = true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -55,13 +54,13 @@ public class TransactionProvider {
         try {
             if (objects != null && !objects.isEmpty()) {
                 for (Object o : objects) {
-                    try{
+                    try {
                         em.persist(o);
-                    }catch (ConstraintViolationException e) {
-                        for(Object a: e.getConstraintViolations().toArray()){
-                            System.err.println("Exception Caught: "+a.toString());
+                    } catch (ConstraintViolationException e) {
+                        for (Object a : e.getConstraintViolations().toArray()) {
+                            System.err.println("Exception Caught: " + a.toString());
                         }
-                 }
+                    }
                 }
                 em.flush();
             }

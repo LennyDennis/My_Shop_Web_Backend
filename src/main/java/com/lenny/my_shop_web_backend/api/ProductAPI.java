@@ -58,6 +58,12 @@ public class ProductAPI {
     }
 
     @GET
+    @Path("/mostSold")
+    public Response getMostSoldProducts(){
+        return productBean.getMostSoldProducts();
+    }
+
+    @GET
     public Response getProduct(@QueryParam("productId") Integer productId){
         return productBean.getProduct_ById(productId);
     }

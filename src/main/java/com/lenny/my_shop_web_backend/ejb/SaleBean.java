@@ -88,7 +88,7 @@ public class SaleBean {
         for (SaleDetail saleDetail : saleDetails) {
             int productId = saleDetail.getProduct().getId();
             Product product = productDatabaseBean.getProduct_ById(productId);
-            if(Objects.isNull(product)){
+            if (Objects.isNull(product)) {
                 throw new BadRequestException("One of the products you are trying to sell does not exist");
             }
             int soldQuantity = saleDetail.getSoldQuantity();
@@ -128,7 +128,7 @@ public class SaleBean {
                 res.put("message", "No sales exists");
             } else {
                 List<HashMap<String, Object>> saleInfoList = new ArrayList<>();
-                getAllSaleInfo(sales, saleInfoList);
+                getAllSales(sales, saleInfoList);
                 res.put("sales", saleInfoList);
                 res.put("message", "Fetched all sales successfully");
             }
@@ -175,10 +175,8 @@ public class SaleBean {
             if (balance == null) {
                 throw new BadRequestException("This sale does not exist");
             }
-            List<Sale> balances = new ArrayList<>();
-            balances.add(balance);
             List<HashMap<String, Object>> balanceInfoList = new ArrayList<>();
-            getAllSaleInfo(balances, balanceInfoList);
+            getSaleInfo(balance,balanceInfoList);
             HashMap<String, Object> res = new HashMap<>();
             res.put("balance", balanceInfoList);
             res.put("message", "Balance fetched successfully");
@@ -234,42 +232,83 @@ public class SaleBean {
         }
     }
 
-    private void getAllSaleInfo(List<Sale> sales, List<HashMap<String, Object>> saleInfoList) {
+    private void getAllSales(List<Sale> sales, List<HashMap<String, Object>> saleInfoList) {
         for (Sale sale : sales) {
-            HashMap<String, Object> saleInfoHashMap = new HashMap<>();
-            HashMap<String, Object> saleHashMap = new HashMap<>();
-            saleHashMap.put("id", sale.getId());
-            saleHashMap.put("seller", sale.getSeller().getName());
-            String customerName = null;
-            if (sale.getCustomer() != null) {
-                customerName = sale.getCustomer().getName();
-            }
-            saleHashMap.put("customer", customerName);
-            saleHashMap.put("totalCost", assignTwoDecimal(sale.getTotalCost()));
-            saleHashMap.put("cashPaid", assignTwoDecimal(sale.getCashPaid()));
-            float balance = 0.0F;
-            if (sale.getBalance() != null) {
-                balance = sale.getBalance();
-            }
-            saleHashMap.put("balance", assignTwoDecimal(balance));
-            saleHashMap.put("sellDate", sale.getSellDate());
-            saleInfoHashMap.put("sale", saleHashMap);
             List<SaleDetail> saleDetails = salesDetailsDatabaseBean.getSalesDetail_BySale(sale.getId());
             if (!saleDetails.isEmpty()) {
-                List<HashMap<String, Object>> saleDetailsList = new ArrayList<>();
                 for (SaleDetail saleDetail : saleDetails) {
                     HashMap<String, Object> salesDetailHashMap = new HashMap<>();
-                    salesDetailHashMap.put("id", saleDetail.getId());
+                    salesDetailHashMap.put("saleId", sale.getId());
+                    salesDetailHashMap.put("seller", sale.getSeller().getName());
+                    String customerName = null;
+                    if (sale.getCustomer() != null) {
+                        customerName = sale.getCustomer().getName();
+                    }
+                    salesDetailHashMap.put("customer", customerName);
+                    salesDetailHashMap.put("totalCost", assignTwoDecimal(sale.getTotalCost()));
+                    salesDetailHashMap.put("cashPaid", assignTwoDecimal(sale.getCashPaid()));
+                    float balance = 0.0F;
+                    if (sale.getBalance() != null) {
+                        balance = sale.getBalance();
+                    }
+                    salesDetailHashMap.put("balance", assignTwoDecimal(balance));
+                    salesDetailHashMap.put("sellDate", sale.getSellDate());
+                    salesDetailHashMap.put("salesDetailId", saleDetail.getId());
                     salesDetailHashMap.put("sale", saleDetail.getSale().getId());
                     salesDetailHashMap.put("product", saleDetail.getProduct().getName());
                     salesDetailHashMap.put("sellingPrice", assignTwoDecimal(saleDetail.getProduct().getSellingPrice()));
                     salesDetailHashMap.put("cashPaid", assignTwoDecimal(saleDetail.getSellingPrice()));
                     salesDetailHashMap.put("soldQuantity", saleDetail.getSoldQuantity());
-                    saleDetailsList.add(salesDetailHashMap);
+                    saleInfoList.add(salesDetailHashMap);
                 }
-                saleInfoHashMap.put("saleDetails", saleDetailsList);
             }
-            saleInfoList.add(saleInfoHashMap);
         }
+    }
+
+    private void getAllSaleInfo(List<Sale> sales, List<HashMap<String, Object>> saleInfoList) {
+        for (Sale sale : sales) {
+            getSaleInfo(sale,saleInfoList);
+        }
+    }
+
+    private void getSaleInfo(Sale sale,List<HashMap<String, Object>> saleInfoList){
+        HashMap<String, Object> saleInfoHashMap = new HashMap<>();
+        HashMap<String, Object> saleHashMap = new HashMap<>();
+        saleHashMap.put("id", sale.getId());
+        saleHashMap.put("seller", sale.getSeller().getName());
+        String customerName = null;
+        String customerPhone = null;
+        if (sale.getCustomer() != null) {
+            customerName = sale.getCustomer().getName();
+            customerPhone = sale.getCustomer().getPhone();
+        }
+        saleHashMap.put("customer", customerName);
+        saleHashMap.put("customerPhone", customerPhone);
+        saleHashMap.put("totalCost", assignTwoDecimal(sale.getTotalCost()));
+        saleHashMap.put("cashPaid", assignTwoDecimal(sale.getCashPaid()));
+        float balance = 0.0F;
+        if (sale.getBalance() != null) {
+            balance = sale.getBalance();
+        }
+        saleHashMap.put("balance", assignTwoDecimal(balance));
+        saleHashMap.put("modifiedOn", sale.getModifiedOn());
+        saleHashMap.put("sellDate", sale.getSellDate());
+        saleInfoHashMap.put("sale", saleHashMap);
+        List<SaleDetail> saleDetails = salesDetailsDatabaseBean.getSalesDetail_BySale(sale.getId());
+        if (!saleDetails.isEmpty()) {
+            List<HashMap<String, Object>> saleDetailsList = new ArrayList<>();
+            for (SaleDetail saleDetail : saleDetails) {
+                HashMap<String, Object> salesDetailHashMap = new HashMap<>();
+                salesDetailHashMap.put("id", saleDetail.getId());
+                salesDetailHashMap.put("sale", saleDetail.getSale().getId());
+                salesDetailHashMap.put("product", saleDetail.getProduct().getName());
+                salesDetailHashMap.put("sellingPrice", assignTwoDecimal(saleDetail.getProduct().getSellingPrice()));
+                salesDetailHashMap.put("cashPaid", assignTwoDecimal(saleDetail.getSellingPrice()));
+                salesDetailHashMap.put("soldQuantity", saleDetail.getSoldQuantity());
+                saleDetailsList.add(salesDetailHashMap);
+            }
+            saleInfoHashMap.put("saleDetails", saleDetailsList);
+        }
+        saleInfoList.add(saleInfoHashMap);
     }
 }

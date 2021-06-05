@@ -7,6 +7,7 @@ package com.lenny.my_shop_web_backend.ejb_db;
 
 import com.lenny.my_shop_web_backend.entities.Category;
 import com.lenny.my_shop_web_backend.entities.Product;
+import com.lenny.my_shop_web_backend.entities.SaleDetail;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
 import javax.ejb.EJB;
@@ -97,6 +98,19 @@ public class ProductDatabaseBean {
         EntityManager entityManager = transactionProvider.getEM();
         Query query = entityManager.createQuery("SELECT p FROM Product p WHERE p.restockStatus = :restockStatus");
         query.setParameter("restockStatus", RESTOCK_ON);
+        return transactionProvider.getManyFromQuery(query);
+    }
+
+    public List<SaleDetail> getProductSaleDetail(){
+        EntityManager entityManager = transactionProvider.getEM();
+        Query query = entityManager.createQuery("SELECT s FROM SaleDetail s");
+        return transactionProvider.getManyFromQuery(query);
+    }
+
+    public List<SaleDetail> getProductSaleDetail_ByProduct(Product product){
+        EntityManager entityManager = transactionProvider.getEM();
+        Query query = entityManager.createQuery("SELECT s FROM SaleDetail s WHERE s.product = :product");
+        query.setParameter("product", product);
         return transactionProvider.getManyFromQuery(query);
     }
 
