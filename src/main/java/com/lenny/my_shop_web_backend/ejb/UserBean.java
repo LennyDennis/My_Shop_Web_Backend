@@ -67,8 +67,10 @@ public class UserBean {
                 if (isValidEmail) {
                     throw new BadRequestException("Please specify a valid email");
                 }
+                //to remove
+                String testPassword = "test";
                 BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                String encodedPassword = encoder.encode(user.getPassword());
+                String encodedPassword = encoder.encode(testPassword);
                 user.setPassword(encodedPassword);
                 user.setModifiedOn(currentDate);
                 user.setRegisteredDate(currentDate);
@@ -300,7 +302,7 @@ public class UserBean {
                 }else{
                     activationStatus = DEACTIVATE;
                 }
-                userToEdit.setRole(activationStatus);
+                userToEdit.setActivationStatus(activationStatus);
             }
 
             Date currentDate = new Date();
