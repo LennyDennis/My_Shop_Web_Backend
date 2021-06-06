@@ -6,7 +6,9 @@
 package com.lenny.my_shop_web_backend.ejb;
 
 import com.google.common.base.Strings;
+import com.lenny.my_shop_web_backend.ejb_db.SaleDatabaseBean;
 import com.lenny.my_shop_web_backend.ejb_db.UserDatabaseBean;
+import com.lenny.my_shop_web_backend.entities.SaleDetail;
 import com.lenny.my_shop_web_backend.entities.User;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 import com.lenny.my_shop_web_backend.utilities.ConstantVariables;
@@ -24,6 +26,7 @@ import javax.ws.rs.core.Response;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.*;
+import static com.lenny.my_shop_web_backend.utilities.Utils.getDateFromMilliSeconds;
 
 /**
  * @author lenny
@@ -40,6 +43,9 @@ public class UserBean {
 
     @EJB
     private UserDatabaseBean userDbBean;
+
+    @EJB
+    private SaleDatabaseBean salesDatabaseBean;
 
     @EJB
     private MailBean mailBean;
@@ -225,9 +231,15 @@ public class UserBean {
                         HashMap<String, Object> customerDetail = new HashMap<>();
                         customerDetail.put("id", customer.getId());
                         customerDetail.put("name", customer.getName());
+                        List<SaleDetail> customerSales = salesDatabaseBean.getSale_ByCustomer(customer);
+                        Integer productsBought = 0;
+                        for (SaleDetail saleDetail : customerSales) {
+                            productsBought += saleDetail.getSoldQuantity();
+                        }
+                        customerDetail.put("productsBought", productsBought);
                         customerDetail.put("phone", customer.getPhone());
                         customerDetail.put("role", customer.getRole());
-                        customerDetail.put("registeredDate", customer.getRegisteredDate());
+                        customerDetail.put("registeredDate", getDateFromMilliSeconds(customer.getRegisteredDate()));
                         customerList.add(customerDetail);
                     }
                     res.put("message", "Customers fetched successfully");
@@ -269,37 +281,37 @@ public class UserBean {
         userDetail.put("activationStatus", user.getActivationStatus());
         userDetail.put("registrationStatus", user.getRegistrationStatus());
         userDetail.put("deletionStatus", user.getDeletionStatus());
-        userDetail.put("registeredDate", user.getRegisteredDate());
+        userDetail.put("registeredDate", getDateFromMilliSeconds(user.getRegisteredDate()));
     }
 
-    public Response editUser(User user){
+    public Response editUser(User user) {
         try {
-            if(user == null){
+            if (user == null) {
                 throw new BadRequestException("User is null");
             }
             int userId = user.getId();
             User userToEdit = userDbBean.getUser_ById(userId);
-            if(userToEdit == null){
+            if (userToEdit == null) {
                 throw new BadRequestException("This user does not exist");
             }
-            if(user.getName() != null){
+            if (user.getName() != null) {
                 userToEdit.setName(user.getName());
             }
-            if(user.getEmail() != null){
+            if (user.getEmail() != null) {
                 userToEdit.setEmail(user.getEmail());
             }
-            if(user.getPhone() != null){
+            if (user.getPhone() != null) {
                 userToEdit.setPhone(user.getPhone());
             }
-            if(user.getRole() != null){
+            if (user.getRole() != null) {
                 userToEdit.setRole(user.getRole());
             }
 
-            if(user.getActivationStatus() != null){
+            if (user.getActivationStatus() != null) {
                 int activationStatus;
-                if(user.getActivationStatus() == ACTIVATE){
+                if (user.getActivationStatus() == ACTIVATE) {
                     activationStatus = ACTIVATE;
-                }else{
+                } else {
                     activationStatus = DEACTIVATE;
                 }
                 userToEdit.setActivationStatus(activationStatus);
@@ -308,12 +320,12 @@ public class UserBean {
             Date currentDate = new Date();
             userToEdit.setModifiedOn(currentDate);
 
-            if(!provider.updateEntity(userToEdit)){
+            if (!provider.updateEntity(userToEdit)) {
                 throw new PersistenceException("User not updated successfully");
             }
 
             HashMap<String, Object> res = new HashMap<>();
-            res.put("message","User updated successfully");
+            res.put("message", "User updated successfully");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
@@ -325,25 +337,31 @@ public class UserBean {
         }
     }
 
-    public Response deleteUser(Integer userId){
+    public Response deleteUser(Integer userId) {
         try {
-            if(userId == null){
+            if (userId == null) {
                 throw new BadRequestException("User is null");
             }
             User userToDelete = userDbBean.getUser_ById(userId);
-            if(userToDelete == null){
+            if (userToDelete == null) {
                 throw new BadRequestException("This user does not exist");
+            }
+            if (userToDelete.getRole() == CUSTOMER_ROLE) {
+                List userSaleDetails = salesDatabaseBean.getSale_ByCustomer(userToDelete);
+                if (!userSaleDetails.isEmpty()) {
+                    throw new BadRequestException("You cannot delete a customer who has made a sale");
+                }
             }
             Date currentDate = new Date();
             userToDelete.setModifiedOn(currentDate);
             userToDelete.setDeletionStatus(DELETED);
 
-            if(!provider.updateEntity(userToDelete)){
+            if (!provider.updateEntity(userToDelete)) {
                 throw new PersistenceException("User not deleted successfully");
             }
 
             HashMap<String, Object> res = new HashMap<>();
-            res.put("message","User deleted successfully");
+            res.put("message", "User deleted successfully");
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();

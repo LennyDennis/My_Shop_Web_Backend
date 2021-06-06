@@ -1,6 +1,7 @@
 package com.lenny.my_shop_web_backend.ejb_db;
 
 import com.lenny.my_shop_web_backend.entities.Sale;
+import com.lenny.my_shop_web_backend.entities.User;
 import com.lenny.my_shop_web_backend.jpa.TransactionProvider;
 
 import javax.ejb.EJB;
@@ -9,9 +10,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.CUSTOMER_ROLE;
-import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.NOT_DELETED;
 
 @Stateless
 public class SaleDatabaseBean {
@@ -59,5 +57,16 @@ public class SaleDatabaseBean {
         } finally {
             return saleBalance;
         }
+    }
+
+    public List getSale_ByCustomer(User customer) {
+        List sale = null;
+        if (customer != null) {
+            EntityManager em = transactionProvider.getEM();
+            Query q = em.createQuery("SELECT s FROM SaleDetail s WHERE s.sale.customer = :customer");
+            q.setParameter("customer", customer);
+            sale = transactionProvider.getManyFromQuery(q);
+        }
+        return sale;
     }
 }

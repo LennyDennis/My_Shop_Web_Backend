@@ -18,7 +18,7 @@ public final class ConstantVariables {
 
     //deletion status
     public static final int DELETED = 1;
-    public static final int NOT_DELETED = -1;
+    public static final int NOT_DELETED = 0;
 
     //response code status
     public static final int SUCCESS_CODE = 200;
@@ -26,11 +26,11 @@ public final class ConstantVariables {
     
     //active status 
     public static final int ACTIVATE = 1;
-    public static final int DEACTIVATE = -1;
+    public static final int DEACTIVATE = 0;
 
     //restock status
     public static final int RESTOCK_ON = 1;
-    public static final int RESTOCK_OFF = -1;
+    public static final int RESTOCK_OFF = 0;
 
     public static final int MIN_RESTOCK_ACTIVATION_NUMBER= 6;
 
