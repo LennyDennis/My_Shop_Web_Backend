@@ -16,11 +16,14 @@ import javax.ejb.Stateless;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.MIN_RESTOCK_ACTIVATION_NUMBER;
 import static com.lenny.my_shop_web_backend.utilities.ConstantVariables.RESTOCK_ON;
 import static com.lenny.my_shop_web_backend.utilities.Utils.assignTwoDecimal;
+import static java.time.temporal.TemporalAdjusters.firstDayOfYear;
 
 @Stateless
 public class SaleBean {
@@ -143,6 +146,72 @@ public class SaleBean {
         }
     }
 
+    public Response getTotalStats() {
+        try {
+            HashMap<String, Object> res = new HashMap<>();
+            getAllProductsSold(res);
+            getAllSales(res);
+            getSalesProfitsAndCustomersServed(res);
+            res.put("message","Stats gotten successfully");
+            LocalDate now = LocalDate.now();
+            LocalDate firstDayOfYear = now.with(firstDayOfYear());
+//            q.setParameter("time", firstDayOfYear);
+            LocalDate firstDayOfMonth = now.with(TemporalAdjusters.firstDayOfMonth());
+            res.put("Year",firstDayOfYear);
+            res.put("Month",firstDayOfMonth);
+            res.put("date",now.withDayOfMonth(1));
+            return Response.status(Response.Status.OK).entity(res).build();
+        } catch (BadRequestException e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
+        } catch (PersistenceException e) {
+            return Response.status(Response.Status.FORBIDDEN).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("An error occurred").build();
+        }
+    }
+
+    public void getAllProductsSold(HashMap<String, Object> res) {
+        List<SaleDetail> salesDetails = salesDetailsDatabaseBean.getAllSaleDetails();
+        Integer productsSold = 0;
+        if (!salesDetails.isEmpty()) {
+            for (SaleDetail saleDetail : salesDetails) {
+                productsSold += saleDetail.getSoldQuantity();
+            }
+        }
+        res.put("productsSold", productsSold);
+    }
+
+    public void getAllSales(HashMap<String, Object> res) {
+        List<Sale> sales = saleDatabaseBean.getAllSales();
+        float totalSales = 0;
+        if (!sales.isEmpty()) {
+            for (Sale sale : sales) {
+                totalSales += sale.getTotalCost();
+            }
+        }
+        res.put("totalSales", assignTwoDecimal(totalSales));
+    }
+
+    public void getSalesProfitsAndCustomersServed(HashMap<String, Object> res) {
+        List<Sale> sales = saleDatabaseBean.getAllSales();
+        float totalProfits = 0;
+        if (!sales.isEmpty()) {
+            for (Sale sale : sales) {
+                List<SaleDetail> saleDetails = salesDetailsDatabaseBean.getSalesDetail_BySale(sale.getId());
+                for(SaleDetail saleDetail:saleDetails){
+                    float buyingPrice = saleDetail.getProduct().getBuyingPrice();
+                    float actualSellingPrice = saleDetail.getSellingPrice();
+                    int productsSold = saleDetail.getSoldQuantity();
+                    float profit = (actualSellingPrice-buyingPrice) * productsSold;
+                    totalProfits += profit;
+                }
+            }
+        }
+        res.put("totalProfits", assignTwoDecimal(totalProfits));
+        res.put("totalCustomers", sales.size());
+    }
+
     public Response getAllBalances() {
         try {
             List<Sale> balances = saleDatabaseBean.getAllBalances();
@@ -176,7 +245,7 @@ public class SaleBean {
                 throw new BadRequestException("This sale does not exist");
             }
             List<HashMap<String, Object>> balanceInfoList = new ArrayList<>();
-            getSaleInfo(balance,balanceInfoList);
+            getSaleInfo(balance, balanceInfoList);
             HashMap<String, Object> res = new HashMap<>();
             res.put("balance", balanceInfoList);
             res.put("message", "Balance fetched successfully");
@@ -267,11 +336,11 @@ public class SaleBean {
 
     private void getAllSaleInfo(List<Sale> sales, List<HashMap<String, Object>> saleInfoList) {
         for (Sale sale : sales) {
-            getSaleInfo(sale,saleInfoList);
+            getSaleInfo(sale, saleInfoList);
         }
     }
 
-    private void getSaleInfo(Sale sale,List<HashMap<String, Object>> saleInfoList){
+    private void getSaleInfo(Sale sale, List<HashMap<String, Object>> saleInfoList) {
         HashMap<String, Object> saleInfoHashMap = new HashMap<>();
         HashMap<String, Object> saleHashMap = new HashMap<>();
         saleHashMap.put("id", sale.getId());

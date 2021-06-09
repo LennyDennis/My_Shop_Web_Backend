@@ -241,6 +241,7 @@ public class ProductBean {
             } else {
                 List<Object> products = new ArrayList<>();
                 saveProductInHashMap(productList, products);
+                res.put("categoryName",category.getName());
                 res.put("products", products);
                 res.put("Message", "Products in " + category.getName() + " fetched successfully");
             }
