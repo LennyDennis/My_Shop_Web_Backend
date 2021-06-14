@@ -244,7 +244,7 @@ public class ProductBean {
                 res.put("categoryName",category.getName());
                 res.put("products", products);
                 res.put("Message", "Products in " + category.getName() + " fetched successfully");
-            }
+            } 
             return Response.status(Response.Status.OK).entity(res).build();
         } catch (BadRequestException e) {
             return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage()).build();
